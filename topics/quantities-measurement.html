@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantities & Measurement - EJC Physics Simulations</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        
+        .back-link {
+            display: inline-block;
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 20px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        
+        .back-link:hover {
+            background: #eff6ff;
+        }
+        
+        .simulation-item {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .simulation-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        
+        .sim-screenshot {
+            flex-shrink: 0;
+            width: 400px;
+            height: 300px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #e2e8f0;
+        }
+        
+        .sim-screenshot img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .sim-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sim-details h3 {
+            font-size: 24px;
+            color: #1e3a8a;
+            margin-bottom: 12px;
+        }
+        
+        .sim-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .level-badge {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .sim-author {
+            color: #64748b;
+            font-size: 14px;
+        }
+        
+        .sim-description {
+            color: #475569;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+        
+        .no-simulations {
+            background: white;
+            padding: 60px 40px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .no-simulations p {
+            font-size: 18px;
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .simulation-item {
+                flex-direction: column;
+            }
+            
+            .sim-screenshot {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Quantities & Measurement</h1>
+        <div class="subtitle">EJC Physics Simulations | 2026 A-Level Syllabus</div>
+    </div>
+    
+    <div class="container">
+        <a href="../index.html" class="back-link">? Back to All Topics</a>
+        
+        
+      <div class="no-simulations">
+        <p>No simulations available for this topic yet.</p>
+        <p>Be the first to contribute!</p>
+      </div>
+    
+    </div>
+</body>
+</html>
