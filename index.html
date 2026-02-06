@@ -95,19 +95,10 @@
             margin-bottom: 20px;
         }
         
-        .search-icon {
-            position: absolute;
-            left: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #94a3b8;
-            font-size: 18px;
-            font-weight: bold;
-        }
-        
+               
         .search-box {
             width: 100%;
-            padding: 18px 20px 18px 55px;
+            padding: 18px 20px;
             font-size: 16px;
             border: 2px solid #e2e8f0;
             border-radius: 12px;
@@ -205,21 +196,12 @@
             border-color: #3b82f6;
         }
         
-        .topic-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-            color: #3b82f6;
-            transition: transform 0.3s;
-        }
-        
-        .topic-card:hover .topic-icon {
-            transform: scale(1.1);
-        }
-        
+                
         .topic-card h3 {
             color: #1e3a8a;
             font-size: 18px;
             margin-bottom: 20px;
+            margin-top: 10px;
             min-height: 48px;
             display: flex;
             align-items: center;
@@ -318,7 +300,6 @@
             
             <div class="search-container">
                 <div class="search-wrapper">
-                    <span class="search-icon">?</span>
                     <input type="text" id="searchBox" class="search-box" placeholder="Search by topic, keyword, or author...">
                 </div>
                 <div class="filter-container">
@@ -340,7 +321,6 @@
         <div class="topic-grid" id="topicGrid">
             
       <a href="topics/quantities-measurement.html" class="topic-card" data-count="0">
-        <div class="topic-icon">?</div>
         <h3>Quantities & Measurement</h3>
         <div class="card-footer">
           <div class="sim-count">0</div>
@@ -349,7 +329,6 @@
       </a>
     
       <a href="topics/forces-moments.html" class="topic-card" data-count="0">
-        <div class="topic-icon">?</div>
         <h3>Forces & Moments</h3>
         <div class="card-footer">
           <div class="sim-count">0</div>
@@ -358,7 +337,6 @@
       </a>
     
       <a href="topics/motion-forces.html" class="topic-card" data-count="1">
-        <div class="topic-icon">?</div>
         <h3>Motion & Forces</h3>
         <div class="card-footer">
           <div class="sim-count">1</div>
@@ -367,7 +345,6 @@
       </a>
     
       <a href="topics/energy-fields.html" class="topic-card" data-count="0">
-        <div class="topic-icon">?</div>
         <h3>Energy & Fields</h3>
         <div class="card-footer">
           <div class="sim-count">0</div>
@@ -376,7 +353,6 @@
       </a>
     
       <a href="topics/frames-of-reference.html" class="topic-card" data-count="0">
-        <div class="topic-icon">?</div>
         <h3>Frames of Reference</h3>
         <div class="card-footer">
           <div class="sim-count">0</div>
@@ -385,7 +361,6 @@
       </a>
     
       <a href="topics/projectile-motion.html" class="topic-card" data-count="0">
-        <div class="topic-icon">?</div>
         <h3>Projectile Motion</h3>
         <div class="card-footer">
           <div class="sim-count">0</div>
@@ -394,7 +369,6 @@
       </a>
     
       <a href="topics/collisions.html" class="topic-card" data-count="0">
-        <div class="topic-icon">?</div>
         <h3>Collisions</h3>
         <div class="card-footer">
           <div class="sim-count">0</div>
@@ -403,7 +377,6 @@
       </a>
     
       <a href="topics/circular-motion.html" class="topic-card" data-count="0">
-        <div class="topic-icon">?</div>
         <h3>Circular Motion</h3>
         <div class="card-footer">
           <div class="sim-count">0</div>
@@ -412,7 +385,6 @@
       </a>
     
       <a href="topics/gravitational-fields.html" class="topic-card" data-count="0">
-        <div class="topic-icon">?</div>
         <h3>Gravitational Fields</h3>
         <div class="card-footer">
           <div class="sim-count">0</div>
@@ -421,7 +393,6 @@
       </a>
     
       <a href="topics/oscillations.html" class="topic-card" data-count="0">
-        <div class="topic-icon">?</div>
         <h3>Oscillations</h3>
         <div class="card-footer">
           <div class="sim-count">0</div>
@@ -430,7 +401,6 @@
       </a>
     
       <a href="topics/rotational-motion.html" class="topic-card" data-count="0">
-        <div class="topic-icon">?</div>
         <h3>Rotational Motion</h3>
         <div class="card-footer">
           <div class="sim-count">0</div>
@@ -439,7 +409,6 @@
       </a>
     
       <a href="topics/wave-motion.html" class="topic-card" data-count="0">
-        <div class="topic-icon">?</div>
         <h3>Wave Motion</h3>
         <div class="card-footer">
           <div class="sim-count">0</div>
@@ -448,7 +417,6 @@
       </a>
     
       <a href="topics/superposition.html" class="topic-card" data-count="0">
-        <div class="topic-icon">?</div>
         <h3>Superposition</h3>
         <div class="card-footer">
           <div class="sim-count">0</div>
@@ -457,7 +425,6 @@
       </a>
     
       <a href="topics/temperature-ideal-gases.html" class="topic-card" data-count="0">
-        <div class="topic-icon">?</div>
         <h3>Temperature & Ideal Gases</h3>
         <div class="card-footer">
           <div class="sim-count">0</div>
@@ -466,7 +433,6 @@
       </a>
     
       <a href="topics/thermodynamic-systems.html" class="topic-card" data-count="0">
-        <div class="topic-icon">?</div>
         <h3>Thermodynamic Systems</h3>
         <div class="card-footer">
           <div class="sim-count">0</div>
@@ -475,7 +441,6 @@
       </a>
     
       <a href="topics/electric-fields.html" class="topic-card" data-count="0">
-        <div class="topic-icon">?</div>
         <h3>Electric Fields</h3>
         <div class="card-footer">
           <div class="sim-count">0</div>
@@ -484,7 +449,6 @@
       </a>
     
       <a href="topics/electric-magnetic-fields.html" class="topic-card" data-count="0">
-        <div class="topic-icon">?</div>
         <h3>Electric & Magnetic Fields</h3>
         <div class="card-footer">
           <div class="sim-count">0</div>
@@ -493,7 +457,6 @@
       </a>
     
       <a href="topics/currents.html" class="topic-card" data-count="0">
-        <div class="topic-icon">?</div>
         <h3>Currents</h3>
         <div class="card-footer">
           <div class="sim-count">0</div>
@@ -502,7 +465,6 @@
       </a>
     
       <a href="topics/circuits.html" class="topic-card" data-count="0">
-        <div class="topic-icon">?</div>
         <h3>Circuits</h3>
         <div class="card-footer">
           <div class="sim-count">0</div>
@@ -511,7 +473,6 @@
       </a>
     
       <a href="topics/electromagnetic-forces.html" class="topic-card" data-count="0">
-        <div class="topic-icon">?</div>
         <h3>Electromagnetic Forces</h3>
         <div class="card-footer">
           <div class="sim-count">0</div>
@@ -520,7 +481,6 @@
       </a>
     
       <a href="topics/electromagnetic-induction.html" class="topic-card" data-count="0">
-        <div class="topic-icon">?</div>
         <h3>Electromagnetic Induction</h3>
         <div class="card-footer">
           <div class="sim-count">0</div>
@@ -529,7 +489,6 @@
       </a>
     
       <a href="topics/quantum-physics.html" class="topic-card" data-count="0">
-        <div class="topic-icon">?</div>
         <h3>Quantum Physics</h3>
         <div class="card-footer">
           <div class="sim-count">0</div>
@@ -538,7 +497,6 @@
       </a>
     
       <a href="topics/nuclear-physics.html" class="topic-card" data-count="0">
-        <div class="topic-icon">?</div>
         <h3>Nuclear Physics</h3>
         <div class="card-footer">
           <div class="sim-count">0</div>
@@ -547,7 +505,6 @@
       </a>
     
       <a href="topics/special-relativity.html" class="topic-card" data-count="0">
-        <div class="topic-icon">?</div>
         <h3>Special Relativity</h3>
         <div class="card-footer">
           <div class="sim-count">0</div>
