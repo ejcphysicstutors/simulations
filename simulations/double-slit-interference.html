@@ -51,7 +51,7 @@
         body { margin: 0; overflow: hidden; background-color: #020617; font-family: 'Inter', sans-serif; }
         .control-panel {
             position: absolute;
-            h
+            height:
             left: 20px;
             width: 300px;
             background: rgba(15, 23, 42, 0.85);
@@ -90,7 +90,7 @@
         .value-text { font-family: monospace; color: #38bdf8; font-weight: bold; }
         canvas { display: block; width: 100vw; height: 100vh; }
     </style>
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">h
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
     <div class="ejc-credit-banner">
@@ -104,16 +104,16 @@
         
 
     <button id="showPanelBtn" class="show-controls-btn shadow-xl hidden" title="Show Controls">
-        <span class="text-xl<i class="fas fa-bars"></i></span>
+        <span class="text-xl"><i class="fas fa-bars"></i></span>
     </button>
 
     <div id="mainPanel" class="control-panel shadow-2xl">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-xl font-bold flex items-center gap-2">
-                <span class="h">??</span> Ray Interference
+                <span class="h">λ</span> Ray Interference
             </h1>
             <button id="hidePanelBtn" class="text-slate-500 hover:text-white transition-colors" title="Hide Controls">
-                <span class="text-lg">?<i class="fas fa-times"></i>i></span>
+                <span class="text-lg">×<i class="fas fa-times"></i>i></span>
             </button>
         </div>
         
@@ -143,7 +143,7 @@
 
         <div class="slider-group">
             <div class="flex justify-between mb-2">
-                <span class="label-text">Optical Material (n?L)</span>
+                <span class="label-text">Optical Material (nΔL)</span>
                 <span id="materialVal" class="value-text">0.0</span>
             </div>
             <input type="range" id="materialShift" min="0" max="100" value="0">
@@ -368,8 +368,8 @@
             const materialVal = parseFloat(controls.material.value);
             
             controls.lambdaText.innerText = `${controls.lambda.value} nm`;
-            controls.dText.innerText = `${controls.d.value} ?m`;
-            controls.tiltText.innerText = `${tiltDeg}?`;
+            controls.dText.innerText = `${controls.d.value} μm`;
+            controls.tiltText.innerText = `${tiltDeg}°`;
             controls.materialText.innerText = materialVal.toFixed(1);
             
             gl.uniform2f(uniforms.resolution, canvas.width, canvas.height);
@@ -585,8 +585,8 @@
             const materialVal = parseFloat(controls.material.value);
             
             controls.lambdaText.innerText = `${controls.lambda.value} nm`;
-            controls.dText.innerText = `${controls.d.value} ?m`;
-            controls.tiltText.innerText = `${tiltDeg}?`;
+            controls.dText.innerText = `${controls.d.value} μm`;
+            controls.tiltText.innerText = `${tiltDeg}°`;
             controls.materialText.innerText = materialVal.toFixed(1);
             
             gl.uniform2f(uniforms.resolution, canvas.width, canvas.height);
