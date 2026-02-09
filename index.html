@@ -1,347 +1,750 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eunoia Physics Simulations</title>
+    <title>EJC Physics Simulations | Interactive A-Level Physics</title>
+    <meta name="description" content="Interactive physics simulations for H1, H2, and H3 Physics aligned with Singapore's 2026 A-Level syllabus.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
         }
+        
         .hero {
-            background: rgba(255,255,255,0.98);
-            padding: 60px 20px;
-            text-align: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #1e3a8a;
-            font-size: 52px;
-            margin: 0 0 15px 0;
-            font-weight: 800;
-        }
-        .subtitle {
-            color: #64748b;
-            font-size: 22px;
-            margin-bottom: 20px;
-        }
-        .stats {
-            display: inline-block;
-            background: #dbeafe;
-            color: #1e40af;
-            padding: 15px 40px;
-            border-radius: 50px;
-            font-size: 20px;
-            font-weight: 700;
-            margin-top: 10px;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 80px 20px 60px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
         
-        /* FEATURE 1: Submit Button Styling */
-        .submit-btn {
+        .hero-content {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #1e3a8a;
+            font-size: 56px;
+            margin-bottom: 20px;
+            font-weight: 900;
+            line-height: 1.1;
+        }
+        
+        .subtitle {
+            color: #475569;
+            font-size: 22px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        
+        .syllabus-badge {
             display: inline-block;
             background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             color: white;
-            padding: 16px 40px;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        
+        .stats-container {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .stat-box {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 48px;
+            font-weight: 900;
+            color: #3b82f6;
+            line-height: 1;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #64748b;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* === NEW: Submit Button === */
+        .cta-container {
+            margin: 30px 0;
+        }
+        .submit-btn {
+            display: inline-block;
+            background: white;
+            color: #2563eb;
+            padding: 12px 32px;
+            border-radius: 50px;
             text-decoration: none;
-            border-radius: 12px;
             font-weight: 700;
-            font-size: 18px;
-            margin-top: 30px;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-            margin-bottom: 20px;
+            font-size: 16px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+            border: 2px solid transparent; /* Keeps sizing consistent */
+            transition: all 0.2s ease;
         }
         .submit-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+            background: #f8fafc;
         }
         
         .search-container {
-            max-width: 600px;
-            margin: 20px auto 0;
-            position: relative;
+            max-width: 700px;
+            margin: 40px auto 0;
+            padding: 0 20px;
         }
+        
+        .search-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
         .search-box {
             width: 100%;
-            padding: 16px 20px 16px 50px;
+            padding: 18px 20px;
+            font-size: 16px;
             border: 2px solid #e2e8f0;
             border-radius: 12px;
-            font-size: 16px;
             outline: none;
-            transition: border-color 0.3s;
-            box-sizing: border-box;
+            transition: all 0.3s;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
+        
         .search-box:focus {
             border-color: #3b82f6;
-        }
-        .search-icon {
-            position: absolute;
-            left: 18px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 20px;
-            color: #94a3b8;
-        }
-        .search-results-msg {
-            text-align: center;
-            color: #64748b;
-            font-size: 15px;
-            margin-top: 10px;
-            min-height: 22px;
-            font-weight: 600;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
         }
         
         .filter-container {
             display: flex;
             justify-content: center;
-            gap: 12px;
-            margin-top: 25px;
+            gap: 10px;
             flex-wrap: wrap;
         }
+        
         .filter-btn {
-            padding: 10px 24px;
-            border: 2px solid #e2e8f0;
-            border-radius: 50px;
+            padding: 10px 20px;
             background: white;
-            color: #475569;
-            font-size: 15px;
-            font-weight: 600;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
             cursor: pointer;
-            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 600;
+            color: #475569;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
+        
         .filter-btn:hover {
             border-color: #3b82f6;
             color: #3b82f6;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.2);
         }
+        
         .filter-btn.active {
             background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-color: #3b82f6;
             color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        
+        .search-msg {
+            text-align: center;
+            color: #64748b;
+            margin-top: 15px;
+            font-weight: 500;
+            min-height: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .section-title {
+            color: white;
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+        
+        .section-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+        }
+        
+        .topic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        
+        .topic-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px 24px;
+            text-decoration: none;
+            color: inherit;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 2px solid transparent;
+        }
+        
+        .topic-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
             border-color: #3b82f6;
         }
         
-        .container {
-            max-width: 1200px;
-            margin: 50px auto;
-            padding: 0 20px;
-        }
-        .level-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
-        }
-        .level-card {
-            background: rgba(255,255,255,0.95);
-            border-radius: 20px;
-            padding: 40px 30px;
-            transition: transform 0.3s, box-shadow 0.3s;
-            text-align: center;
-            text-decoration: none;
-            color: inherit;
-            display: block;
-        }
-        .level-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 12px 36px rgba(0,0,0,0.18);
-        }
-        .level-card.hidden {
-            display: none;
-        }
-        .level-title {
-            font-size: 32px;
-            font-weight: 700;
+        .topic-card h3 {
             color: #1e3a8a;
+            font-size: 18px;
+            margin-bottom: 20px;
+            margin-top: 10px;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+        
+        .topic-icon {
+            font-size: 48px;
+            color: #3b82f6;
             margin-bottom: 15px;
         }
-        .sim-count {
-            font-size: 56px;
-            font-weight: 800;
-            color: #3b82f6;
-            margin: 20px 0;
+        
+        .card-footer {
+            width: 100%;
+            padding-top: 16px;
+            border-top: 2px solid #f1f5f9;
+            text-align: center;
         }
+        
+        .sim-count {
+            font-size: 36px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 4px;
+        }
+        
         .sim-label {
             color: #64748b;
-            font-size: 16px;
-            margin-bottom: 25px;
-        }
-        .topic-levels {
-            display: flex;
-            justify-content: center;
-            gap: 6px;
-            margin-top: 12px;
-            flex-wrap: wrap;
-        }
-        .topic-level-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        .badge-h1 { background: #dbeafe; color: #1e40af; }
-        .badge-h2 { background: #dcfce7; color: #166534; }
-        .badge-h3 { background: #fef3c7; color: #92400e; }
-        .no-results {
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        footer {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px 20px;
             text-align: center;
-            padding: 60px 20px;
-            color: white;
-            font-size: 20px;
-            display: none;
+            color: #64748b;
+            margin-top: 60px;
         }
-        .info-section {
-            background: rgba(255,255,255,0.98);
-            padding: 50px;
-            border-radius: 15px;
-            margin-top: 40px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        
+        footer p {
+            margin-bottom: 10px;
         }
-        .info-title {
-            font-size: 32px;
-            font-weight: 700;
-            color: #1e3a8a;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        .info-text {
-            color: #475569;
-            font-size: 18px;
-            line-height: 1.8;
-            text-align: center;
-            max-width: 800px;
-            margin: 0 auto;
-        }
+        
         @media (max-width: 768px) {
-            h1 { font-size: 32px; }
-            .subtitle { font-size: 18px; }
-            .level-grid { grid-template-columns: 1fr; }
-            .filter-container { gap: 8px; }
-            .filter-btn { padding: 8px 16px; font-size: 13px; }
+            h1 {
+                font-size: 36px;
+            }
+            
+            .subtitle {
+                font-size: 18px;
+            }
+            
+            .topic-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+                gap: 16px;
+            }
+            
+            .stats-container {
+                gap: 20px;
+            }
+            
+            .stat-number {
+                font-size: 36px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="hero">
-        <h1>Eunoia Physics Simulations</h1>
-        <div class="subtitle">Interactive Learning Tools for H1, H2 & H3 Physics</div>
-        <div class="subtitle" style="font-size: 18px; color: #94a3b8;">2026 Singapore-Cambridge A Level Syllabus</div>
-        <div class="stats">0 Interactive Simulations Available</div>
-        <br>
-        
-        <!-- FEATURE 1: Submit Button -->
-        <a href="https://forms.gle/eoQYjoz2yzdezfqv7" class="submit-btn" target="_blank">Submit Your Simulation</a>
-        
-        <div class="search-container">
-            <span class="search-icon">&#128269;</span>
-            <input type="text" class="search-box" id="searchBox" placeholder="Search simulations by title, description, author, or topic..." oninput="handleSearch()">
-        </div>
-        <div class="search-results-msg" id="searchMsg"></div>
-        
-        <!-- FEATURE 2: Functional Level Filters -->
-        <div class="filter-container">
-            <button class="filter-btn active" onclick="filterByLevel('all')">All Topics</button>
-            <button class="filter-btn" onclick="filterByLevel('H1 Physics')">H1 Physics</button>
-            <button class="filter-btn" onclick="filterByLevel('H2 Physics')">H2 Physics</button>
-            <button class="filter-btn" onclick="filterByLevel('H3 Physics')">H3 Physics</button>
-        </div>
-    </div>
-
-    <div class="container">
-        <div class="level-grid" id="topicGrid">
-
-        </div>
-        <div class="no-results" id="noResults">No simulations found matching your search.</div>
-
-        <div class="info-section">
-            <div class="info-title">About This Collection</div>
-            <div class="info-text">
-                This collection features interactive physics simulations created by Eunoia Junior College teachers
-                for the 2026 Singapore-Cambridge A Level Physics syllabus. Each simulation is designed to help
-                students visualize complex concepts and develop deeper understanding through hands-on exploration.
-                <br><br>
-                Teachers tag simulations with the appropriate level(s), so you'll find simulations organized by
-                H1, H2, or H3 Physics. Many simulations are suitable for multiple levels.
+        <div class="hero-content">
+            <h1>EJC Physics Simulations</h1>
+            <div class="subtitle">Interactive Learning Tools for A-Level Physics</div>
+            <div class="syllabus-badge">2026 Singapore-Cambridge Syllabus</div>
+            
+            <div class="stats-container">
+                <div class="stat-box">
+                    <div class="stat-number">2</div>
+                    <div class="stat-label">Simulations</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">24</div>
+                    <div class="stat-label">Topics</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">Levels</div>
+                </div>
+            </div>
+            
+            <!-- FEATURE 1: Submit Button -->
+            <div class="cta-container">
+                <a href="https://forms.gle/eoQYjoz2yzdezfqv7" target="_blank" class="submit-btn">
+                    <i class="fas fa-paper-plane" style="margin-right: 8px;"></i>Submit Your Simulation
+                </a>
+            </div>
+            
+            <div class="search-container">
+                <div class="search-wrapper">
+                    <input type="text" id="searchBox" class="search-box" placeholder="Search simulations by title, author, or topic...">
+                </div>
+                <div class="filter-container">
+                    <button class="filter-btn active" data-filter="all">All Topics</button>
+                    <button class="filter-btn" data-filter="h1">H1 Physics</button>
+                    <button class="filter-btn" data-filter="h2">H2 Physics</button>
+                    <button class="filter-btn" data-filter="h3">H3 Physics</button>
+                </div>
+                <div id="searchMsg" class="search-msg"></div>
             </div>
         </div>
     </div>
-
-    <!-- FEATURE 3: Embedded Data and Search Logic -->
-    <script>
-        var simData = [];
-        var topicMeta = {};
-        var activeLevel = 'all';
-
-        function handleSearch() {
-            var query = document.getElementById('searchBox').value.toLowerCase().trim();
-            var cards = document.querySelectorAll('.level-card');
-            var msg = document.getElementById('searchMsg');
-            var noResults = document.getElementById('noResults');
-
-            if (!query) {
-                // No search query - show all (respecting level filter)
-                var visibleCount = 0;
-                cards.forEach(function(card) {
-                    var cardLevels = card.getAttribute('data-levels');
-                    if (activeLevel === 'all' || cardLevels.indexOf(activeLevel) !== -1) {
-                        card.classList.remove('hidden');
-                        visibleCount++;
-                    } else {
-                        card.classList.add('hidden');
-                    }
-                });
-                
-                msg.textContent = '';
-                noResults.style.display = visibleCount === 0 ? 'block' : 'none';
-                return;
-            }
-
-            // Search through all simulations
-            var matchingTopics = {};
-            var totalMatches = 0;
+    
+    <div class="container">
+        <div class="section-header">
+            <div class="section-title">Browse by Topic</div>
+            <div class="section-subtitle">Explore 2 interactive simulations across 24 physics topics</div>
+        </div>
+        
+        <div class="topic-grid" id="topicGrid">
             
-            simData.forEach(function(sim) {
-                var searchText = (sim.title + ' ' + sim.description + ' ' + sim.author + ' ' + sim.topic + ' ' + sim.subtopic).toLowerCase();
-                if (searchText.indexOf(query) !== -1) {
-                    // Check level filter for this specific simulation
-                    // Note: If filter is "H1", we only count sims that ARE H1
-                    if (activeLevel === 'all' || sim.levels.indexOf(activeLevel) !== -1) {
-                        matchingTopics[sim.topic] = true;
-                        totalMatches++;
-                    }
-                }
-            });
-
-            var visibleCount = 0;
-            cards.forEach(function(card) {
-                var topic = card.getAttribute('data-topic');
-                // Show card if it has at least one matching simulation
-                if (matchingTopics[topic]) {
+      <a href="topics/quantities-measurement.html" 
+         class="topic-card" 
+         data-count="0"
+         data-levels=""
+         data-topic="quantities & measurement"
+         data-search="">
+        <div class="topic-icon"><i class="fas fa-ruler-combined"></i></div>
+        <h3>Quantities & Measurement</h3>
+        <div class="card-footer">
+          <div class="sim-count">0</div>
+          <div class="sim-label">Simulations</div>
+        </div>
+      </a>
+      <a href="topics/forces-moments.html" 
+         class="topic-card" 
+         data-count="0"
+         data-levels=""
+         data-topic="forces & moments"
+         data-search="">
+        <div class="topic-icon"><i class="fas fa-weight-hanging"></i></div>
+        <h3>Forces & Moments</h3>
+        <div class="card-footer">
+          <div class="sim-count">0</div>
+          <div class="sim-label">Simulations</div>
+        </div>
+      </a>
+      <a href="topics/motion-forces.html" 
+         class="topic-card" 
+         data-count="1"
+         data-levels="h1 h2"
+         data-topic="motion & forces"
+         data-search="car approaching each other: distance of closest approach lim hwee ke in the following animation, we have 2 cars, x and y approaching each other with +5 m/s and - 5m/s. their velocity - time graphs are shown in the graph below and you are asked at which point would cars x and y have the distance of closest approach. students can visually see how the cars move at different times.">
+        <div class="topic-icon"><i class="fas fa-truck-fast"></i></div>
+        <h3>Motion & Forces</h3>
+        <div class="card-footer">
+          <div class="sim-count">1</div>
+          <div class="sim-label">Simulation</div>
+        </div>
+      </a>
+      <a href="topics/energy-fields.html" 
+         class="topic-card" 
+         data-count="0"
+         data-levels=""
+         data-topic="energy & fields"
+         data-search="">
+        <div class="topic-icon"><i class="fas fa-bolt"></i></div>
+        <h3>Energy & Fields</h3>
+        <div class="card-footer">
+          <div class="sim-count">0</div>
+          <div class="sim-label">Simulations</div>
+        </div>
+      </a>
+      <a href="topics/frames-of-reference.html" 
+         class="topic-card" 
+         data-count="0"
+         data-levels=""
+         data-topic="frames of reference"
+         data-search="">
+        <div class="topic-icon"><i class="fas fa-compass"></i></div>
+        <h3>Frames of Reference</h3>
+        <div class="card-footer">
+          <div class="sim-count">0</div>
+          <div class="sim-label">Simulations</div>
+        </div>
+      </a>
+      <a href="topics/projectile-motion.html" 
+         class="topic-card" 
+         data-count="0"
+         data-levels=""
+         data-topic="projectile motion"
+         data-search="">
+        <div class="topic-icon"><i class="fas fa-meteor"></i></div>
+        <h3>Projectile Motion</h3>
+        <div class="card-footer">
+          <div class="sim-count">0</div>
+          <div class="sim-label">Simulations</div>
+        </div>
+      </a>
+      <a href="topics/collisions.html" 
+         class="topic-card" 
+         data-count="0"
+         data-levels=""
+         data-topic="collisions"
+         data-search="">
+        <div class="topic-icon"><i class="fas fa-explosion"></i></div>
+        <h3>Collisions</h3>
+        <div class="card-footer">
+          <div class="sim-count">0</div>
+          <div class="sim-label">Simulations</div>
+        </div>
+      </a>
+      <a href="topics/circular-motion.html" 
+         class="topic-card" 
+         data-count="0"
+         data-levels=""
+         data-topic="circular motion"
+         data-search="">
+        <div class="topic-icon"><i class="fas fa-circle-notch"></i></div>
+        <h3>Circular Motion</h3>
+        <div class="card-footer">
+          <div class="sim-count">0</div>
+          <div class="sim-label">Simulations</div>
+        </div>
+      </a>
+      <a href="topics/gravitational-fields.html" 
+         class="topic-card" 
+         data-count="0"
+         data-levels=""
+         data-topic="gravitational fields"
+         data-search="">
+        <div class="topic-icon"><i class="fas fa-earth-asia"></i></div>
+        <h3>Gravitational Fields</h3>
+        <div class="card-footer">
+          <div class="sim-count">0</div>
+          <div class="sim-label">Simulations</div>
+        </div>
+      </a>
+      <a href="topics/oscillations.html" 
+         class="topic-card" 
+         data-count="0"
+         data-levels=""
+         data-topic="oscillations"
+         data-search="">
+        <div class="topic-icon"><i class="fas fa-wave-square"></i></div>
+        <h3>Oscillations</h3>
+        <div class="card-footer">
+          <div class="sim-count">0</div>
+          <div class="sim-label">Simulations</div>
+        </div>
+      </a>
+      <a href="topics/rotational-motion.html" 
+         class="topic-card" 
+         data-count="0"
+         data-levels=""
+         data-topic="rotational motion"
+         data-search="">
+        <div class="topic-icon"><i class="fas fa-sync"></i></div>
+        <h3>Rotational Motion</h3>
+        <div class="card-footer">
+          <div class="sim-count">0</div>
+          <div class="sim-label">Simulations</div>
+        </div>
+      </a>
+      <a href="topics/wave-motion.html" 
+         class="topic-card" 
+         data-count="0"
+         data-levels=""
+         data-topic="wave motion"
+         data-search="">
+        <div class="topic-icon"><i class="fas fa-water"></i></div>
+        <h3>Wave Motion</h3>
+        <div class="card-footer">
+          <div class="sim-count">0</div>
+          <div class="sim-label">Simulations</div>
+        </div>
+      </a>
+      <a href="topics/superposition.html" 
+         class="topic-card" 
+         data-count="1"
+         data-levels="h2"
+         data-topic="superposition"
+         data-search="double-slit interference wang guangquan double-slit interference with adjustable features such as wavelength, slit separation etc.">
+        <div class="topic-icon"><i class="fas fa-clone"></i></div>
+        <h3>Superposition</h3>
+        <div class="card-footer">
+          <div class="sim-count">1</div>
+          <div class="sim-label">Simulation</div>
+        </div>
+      </a>
+      <a href="topics/temperature-ideal-gases.html" 
+         class="topic-card" 
+         data-count="0"
+         data-levels=""
+         data-topic="temperature & ideal gases"
+         data-search="">
+        <div class="topic-icon"><i class="fas fa-temperature-high"></i></div>
+        <h3>Temperature & Ideal Gases</h3>
+        <div class="card-footer">
+          <div class="sim-count">0</div>
+          <div class="sim-label">Simulations</div>
+        </div>
+      </a>
+      <a href="topics/thermodynamic-systems.html" 
+         class="topic-card" 
+         data-count="0"
+         data-levels=""
+         data-topic="thermodynamic systems"
+         data-search="">
+        <div class="topic-icon"><i class="fas fa-gears"></i></div>
+        <h3>Thermodynamic Systems</h3>
+        <div class="card-footer">
+          <div class="sim-count">0</div>
+          <div class="sim-label">Simulations</div>
+        </div>
+      </a>
+      <a href="topics/electric-fields.html" 
+         class="topic-card" 
+         data-count="0"
+         data-levels=""
+         data-topic="electric fields"
+         data-search="">
+        <div class="topic-icon"><i class="fas fa-charging-station"></i></div>
+        <h3>Electric Fields</h3>
+        <div class="card-footer">
+          <div class="sim-count">0</div>
+          <div class="sim-label">Simulations</div>
+        </div>
+      </a>
+      <a href="topics/electric-magnetic-fields.html" 
+         class="topic-card" 
+         data-count="0"
+         data-levels=""
+         data-topic="electric & magnetic fields"
+         data-search="">
+        <div class="topic-icon"><i class="fas fa-magnet"></i></div>
+        <h3>Electric & Magnetic Fields</h3>
+        <div class="card-footer">
+          <div class="sim-count">0</div>
+          <div class="sim-label">Simulations</div>
+        </div>
+      </a>
+      <a href="topics/currents.html" 
+         class="topic-card" 
+         data-count="0"
+         data-levels=""
+         data-topic="currents"
+         data-search="">
+        <div class="topic-icon"><i class="fas fa-plug"></i></div>
+        <h3>Currents</h3>
+        <div class="card-footer">
+          <div class="sim-count">0</div>
+          <div class="sim-label">Simulations</div>
+        </div>
+      </a>
+      <a href="topics/circuits.html" 
+         class="topic-card" 
+         data-count="0"
+         data-levels=""
+         data-topic="circuits"
+         data-search="">
+        <div class="topic-icon"><i class="fas fa-microchip"></i></div>
+        <h3>Circuits</h3>
+        <div class="card-footer">
+          <div class="sim-count">0</div>
+          <div class="sim-label">Simulations</div>
+        </div>
+      </a>
+      <a href="topics/electromagnetic-forces.html" 
+         class="topic-card" 
+         data-count="0"
+         data-levels=""
+         data-topic="electromagnetic forces"
+         data-search="">
+        <div class="topic-icon"><i class="fas fa-toolbox"></i></div>
+        <h3>Electromagnetic Forces</h3>
+        <div class="card-footer">
+          <div class="sim-count">0</div>
+          <div class="sim-label">Simulations</div>
+        </div>
+      </a>
+      <a href="topics/electromagnetic-induction.html" 
+         class="topic-card" 
+         data-count="0"
+         data-levels=""
+         data-topic="electromagnetic induction"
+         data-search="">
+        <div class="topic-icon"><i class="fas fa-infinity"></i></div>
+        <h3>Electromagnetic Induction</h3>
+        <div class="card-footer">
+          <div class="sim-count">0</div>
+          <div class="sim-label">Simulations</div>
+        </div>
+      </a>
+      <a href="topics/quantum-physics.html" 
+         class="topic-card" 
+         data-count="0"
+         data-levels=""
+         data-topic="quantum physics"
+         data-search="">
+        <div class="topic-icon"><i class="fas fa-atom"></i></div>
+        <h3>Quantum Physics</h3>
+        <div class="card-footer">
+          <div class="sim-count">0</div>
+          <div class="sim-label">Simulations</div>
+        </div>
+      </a>
+      <a href="topics/nuclear-physics.html" 
+         class="topic-card" 
+         data-count="0"
+         data-levels=""
+         data-topic="nuclear physics"
+         data-search="">
+        <div class="topic-icon"><i class="fas fa-radiation"></i></div>
+        <h3>Nuclear Physics</h3>
+        <div class="card-footer">
+          <div class="sim-count">0</div>
+          <div class="sim-label">Simulations</div>
+        </div>
+      </a>
+      <a href="topics/special-relativity.html" 
+         class="topic-card" 
+         data-count="0"
+         data-levels=""
+         data-topic="special relativity"
+         data-search="">
+        <div class="topic-icon"><i class="fas fa-user-astronaut"></i></div>
+        <h3>Special Relativity</h3>
+        <div class="card-footer">
+          <div class="sim-count">0</div>
+          <div class="sim-label">Simulations</div>
+        </div>
+      </a>
+        </div>
+    </div>
+    
+    <footer>
+        <p><strong>EJC Physics Simulations Repository</strong></p>
+        <p>Created by Eunoia Junior College Physics Teachers</p>
+        <p style="font-size: 14px; margin-top: 15px;">Empowering students through interactive learning</p>
+    </footer>
+    
+    <!-- FEATURE 2 & 3: Functional Search and Filters -->
+    <script>
+        const searchBox = document.getElementById('searchBox');
+        const cards = document.querySelectorAll('.topic-card');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const searchMsg = document.getElementById('searchMsg');
+        
+        let activeFilter = 'all';
+        
+        function filterContent() {
+            const query = searchBox.value.toLowerCase().trim();
+            let visibleCount = 0;
+            
+            cards.forEach(card => {
+                // Get data from attributes
+                const topicName = card.getAttribute('data-topic');
+                const levels = card.getAttribute('data-levels'); // e.g., "h1 h2"
+                const searchContent = card.getAttribute('data-search'); // titles, authors, descs
+                
+                // 1. Check Level
+                // If filter is 'all', match is true.
+                // If filter is 'h1', check if 'h1' is in the levels string.
+                const matchesLevel = activeFilter === 'all' || levels.includes(activeFilter);
+                
+                // 2. Check Search Query
+                // Match against Topic Name OR content within the topic (Sim titles/authors)
+                const matchesSearch = query === '' || 
+                                      topicName.includes(query) || 
+                                      searchContent.includes(query);
+                
+                if (matchesLevel && matchesSearch) {
                     card.classList.remove('hidden');
                     visibleCount++;
                 } else {
                     card.classList.add('hidden');
                 }
             });
-
-            msg.textContent = totalMatches + ' simulation' + (totalMatches !== 1 ? 's' : '') + ' found across ' + visibleCount + ' topic' + (visibleCount !== 1 ? 's' : '');
-            noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+            
+            // Update message
+            if (query !== '') {
+                searchMsg.textContent = `Found matching content in ${visibleCount} topic${visibleCount !== 1 ? 's' : ''}`;
+            } else {
+                searchMsg.textContent = '';
+            }
         }
-
-        function filterByLevel(level) {
-            activeLevel = level;
-            // Update active button
-            var btns = document.querySelectorAll('.filter-btn');
-            btns.forEach(function(btn) {
-                btn.classList.remove('active');
-                if ((level === 'all' && btn.textContent === 'All Topics') || btn.textContent === level) {
-                    btn.classList.add('active');
-                }
+        
+        // Event Listeners
+        searchBox.addEventListener('input', filterContent);
+        
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Toggle active class
+                filterBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Update state
+                activeFilter = this.getAttribute('data-filter');
+                filterContent();
             });
-            // Re-run search with new filter
-            handleSearch();
-        }
+        });
     </script>
 </body>
 </html>
