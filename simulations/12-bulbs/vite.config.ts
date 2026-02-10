@@ -6,6 +6,9 @@ export default defineConfig({
   plugins: [react()],
   server: {
     base: '/simulations/simulations/12-bulbs/'
-    port: 3000
+    build: {
+    rollupOptions: {
+      input: 'index.html' // Explicitly tell it index.html is in the root
+    }
   }
 });
