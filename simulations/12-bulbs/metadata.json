@@ -1,0 +1,5 @@
+{
+  "name": "Interactive Series Circuit Simulator",
+  "description": "A high-fidelity physics simulation featuring a 240V series circuit with 12 bulbs, a switch, and movable voltmeter probes. Users can damage components and analyze voltage drops in real-time.",
+  "requestFramePermissions": []
+}
