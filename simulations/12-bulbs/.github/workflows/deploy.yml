@@ -1,0 +1,37 @@
+name: Auto-Compile React
+on:
+  push:
+    branches: ["main", "master"] # Runs on either main or master
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install and Build
+        run: |
+          npm install
+          if [ -f "tsconfig.json" ]; then npm run build; else npm run build --if-present; fi
+
+      - name: Upload Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # This checks for 'dist' (Vite) or 'build' (Create React App)
+          path: |
+            ${{ hashFiles('dist') != '' && 'dist' || 'build' }}
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
