@@ -85,10 +85,10 @@
             letter-spacing: 0.5px;
         }
         
-        /* === NEW: Submit Button === */
         .cta-container {
             margin: 30px 0;
         }
+        
         .submit-btn {
             display: inline-block;
             background: white;
@@ -99,9 +99,10 @@
             font-weight: 700;
             font-size: 16px;
             box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
-            border: 2px solid transparent; /* Keeps sizing consistent */
+            border: 2px solid transparent;
             transition: all 0.2s ease;
         }
+        
         .submit-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
@@ -321,7 +322,7 @@
             
             <div class="stats-container">
                 <div class="stat-box">
-                    <div class="stat-number">4</div>
+                    <div class="stat-number">3</div>
                     <div class="stat-label">Simulations</div>
                 </div>
                 <div class="stat-box">
@@ -334,7 +335,6 @@
                 </div>
             </div>
             
-            <!-- FEATURE 1: Submit Button -->
             <div class="cta-container">
                 <a href="https://forms.gle/eoQYjoz2yzdezfqv7" target="_blank" class="submit-btn">
                     <i class="fas fa-paper-plane" style="margin-right: 8px;"></i>Submit Your Simulation
@@ -359,7 +359,7 @@
     <div class="container">
         <div class="section-header">
             <div class="section-title">Browse by Topic</div>
-            <div class="section-subtitle">Explore 4 interactive simulations across 24 physics topics</div>
+            <div class="section-subtitle">Explore 3 interactive simulations across 24 physics topics</div>
         </div>
         
         <div class="topic-grid" id="topicGrid">
@@ -444,15 +444,15 @@
       </a>
       <a href="topics/collisions.html" 
          class="topic-card" 
-         data-count="1"
-         data-levels="h1 h2"
+         data-count="0"
+         data-levels=""
          data-topic="collisions"
-         data-search="dynamics/e-field - distance of closest approach concept  felix lim to demonstrate the concept of distance of closest approach (v-t graph) of two nuclei with same initial speed but different mass approaching one another. ">
+         data-search="">
         <div class="topic-icon"><i class="fas fa-explosion"></i></div>
         <h3>Collisions</h3>
         <div class="card-footer">
-          <div class="sim-count">1</div>
-          <div class="sim-label">Simulation</div>
+          <div class="sim-count">0</div>
+          <div class="sim-label">Simulations</div>
         </div>
       </a>
       <a href="topics/circular-motion.html" 
@@ -685,7 +685,6 @@
         <p style="font-size: 14px; margin-top: 15px;">Empowering students through interactive learning</p>
     </footer>
     
-    <!-- FEATURE 2 & 3: Functional Search and Filters -->
     <script>
         const searchBox = document.getElementById('searchBox');
         const cards = document.querySelectorAll('.topic-card');
@@ -699,18 +698,11 @@
             let visibleCount = 0;
             
             cards.forEach(card => {
-                // Get data from attributes
                 const topicName = card.getAttribute('data-topic');
-                const levels = card.getAttribute('data-levels'); // e.g., "h1 h2"
-                const searchContent = card.getAttribute('data-search'); // titles, authors, descs
+                const levels = card.getAttribute('data-levels');
+                const searchContent = card.getAttribute('data-search');
                 
-                // 1. Check Level
-                // If filter is 'all', match is true.
-                // If filter is 'h1', check if 'h1' is in the levels string.
                 const matchesLevel = activeFilter === 'all' || levels.includes(activeFilter);
-                
-                // 2. Check Search Query
-                // Match against Topic Name OR content within the topic (Sim titles/authors)
                 const matchesSearch = query === '' || 
                                       topicName.includes(query) || 
                                       searchContent.includes(query);
@@ -723,7 +715,6 @@
                 }
             });
             
-            // Update message
             if (query !== '') {
                 searchMsg.textContent = `Found matching content in ${visibleCount} topic${visibleCount !== 1 ? 's' : ''}`;
             } else {
@@ -731,16 +722,12 @@
             }
         }
         
-        // Event Listeners
         searchBox.addEventListener('input', filterContent);
         
         filterBtns.forEach(btn => {
             btn.addEventListener('click', function() {
-                // Toggle active class
                 filterBtns.forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
-                
-                // Update state
                 activeFilter = this.getAttribute('data-filter');
                 filterContent();
             });
