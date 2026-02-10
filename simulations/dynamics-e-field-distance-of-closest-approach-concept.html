@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamics/E-field - Distance of closest approach concept </title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        .ejc-credit-banner {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            padding: 12px 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 10000;
+        }
+        
+        .ejc-credit-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .ejc-credit-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .ejc-credit-author {
+            font-size: 14px;
+            opacity: 0.95;
+        }
+        
+        .ejc-credit-author strong {
+            font-weight: 600;
+            color: #fbbf24;
+        }
+    </style>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: sans-serif; background-color: #0a0a12; color: white; }
+        #ui-container {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            pointer-events: none;
+            width: 95%;
+            max-width: 1100px;
+        }
+        .panel {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 24px;
+            border-radius: 24px;
+            pointer-events: auto;
+        }
+        input[type=range] { width: 100%; cursor: pointer; accent-color: #6366f1; }
+        select {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .stat-label { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
+        .stat-value { font-size: 1rem; font-weight: bold; }
+        canvas { display: block; position: absolute; top: 0; left: 0; }
+        #stats-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            pointer-events: none;
+            z-index: 10;
+        }
+        #video-preview {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 140px;
+            height: 105px;
+            border-radius: 12px;
+            border: 2px solid rgba(99, 102, 241, 0.5);
+            transform: scaleX(-1);
+            background: #000;
+            object-fit: cover;
+            z-index: 10;
+        }
+        .btn {
+            @apply px-4 py-2 rounded-lg font-bold text-xs transition-all active:scale-95;
+        }
+        .btn-primary { @apply bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/20; }
+        .btn-secondary { @apply bg-slate-800 hover:bg-slate-700 text-slate-300; }
+        
+        .control-group {
+            @apply flex flex-col gap-1 flex-1 min-w-[180px];
+        }
+        .gesture-badge {
+            @apply px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider;
+        }
+    </style>
+</head>
+<body>
+    <div class="ejc-credit-banner">
+        <div class="ejc-credit-content">
+            <div class="ejc-credit-title">Dynamics/E-field - Distance of closest approach concept </div>
+            <div class="ejc-credit-author">Created by <strong>Felix Lim</strong> | EJC Physics</div>
+        </div>
+    </div>
+    
+    <div class="ejc-simulation-container">
+        
+
+    <!-- Top Left Stats -->
+    <div id="stats-overlay" class="space-y-2">
+        <div class="bg-slate-900/80 backdrop-blur-md p-5 rounded-2xl border border-white/10 shadow-xl">
+            <h1 class="text-sm font-bold mb-4 flex items-center gap-2">
+                <span id="power-indicator" class="w-2 h-2 rounded-full bg-slate-600"></span>
+                QUANTUM OPTICS LAB
+            </h1>
+            <div class="grid grid-cols-2 gap-x-10 gap-y-3">
+                <div>
+                    <p class="stat-label">Photon Energy ($E$)</p>
+                    <p id="photon-energy" class="text-white font-mono font-bold">--</p>
+                </div>
+                <div>
+                    <p class="stat-label">Stopping Power ($K_{max}$)</p>
+                    <p id="electron-ke" class="text-emerald-400 font-mono font-bold">--</p>
+                </div>
+                <div>
+                    <p class="stat-label">Target Material</p>
+                    <p id="current-metal" class="text-amber-400 font-bold text-sm">--</p>
+                </div>
+                <div>
+                    <p class="stat-label">Radiation Freq ($f$)</p>
+                    <p id="current-freq" class="text-indigo-400 font-mono font-bold text-sm">--</p>
+                </div>
+                <div>
+                    <p class="stat-label">Current Intensity</p>
+                    <p id="current-intensity" class="text-blue-400 font-bold text-sm">--</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 mt-4 pt-4 border-t border-white/5">
+                <div id="status-msg" class="text-[10px] font-black uppercase tracking-tighter opacity-70">
+                    System Idle
+                </div>
+                <div id="gesture-indicator" class="gesture-badge bg-slate-800 text-slate-500">Ready</div>
+            </div>
+        </div>
+        <div class="text-[10px] text-slate-500 uppercase tracking-widest pl-1" id="tracking-status">
+            Calibrating...
+        </div>
+    </div>
+
+    <!-- Hand Preview -->
+    <video id="video-preview" autoplay playsinline></video>
+
+    <!-- Bottom Controls -->
+    <div id="ui-container">
+        <div class="panel shadow-2xl">
+            <div class="flex flex-wrap items-end gap-6">
+                <!-- Power Controls -->
+                <div class="flex flex-col gap-2 w-32">
+                    <button id="start-btn" class="btn btn-primary">Initialize</button>
+                    <button id="reset-btn" class="btn btn-secondary">Clear Lab</button>
+                </div>
+
+                <!-- Selectors -->
+                <div class="control-group">
+                    <span class="stat-label text-amber-300">Surface Material</span>
+                    <select id="metal-selector">
+                        <option value="1.95">Cesium (1.95 eV)</option>
+                        <option value="2.14">Potassium (2.14 eV)</option>
+                        <option value="2.36">Sodium (2.36 eV)</option>
+                        <option value="4.08">Aluminum (4.08 eV)</option>
+                        <option value="4.70">Copper (4.70 eV)</option>
+                        <option value="6.35">Platinum (6.35 eV)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <div class="flex justify-between items-center">
+                        <span class="stat-label text-indigo-300">Wavelength (?)</span>
+                        <span id="wavelength-val" class="stat-value text-indigo-400">550 nm</span>
+                    </div>
+                    <input type="range" id="wavelength-slider" min="100" max="1200" step="1" value="550">
+                    <div class="flex justify-between text-[8px] text-slate-500 uppercase tracking-tighter">
+                        <span>Ultraviolet</span>
+                        <span>Visible</span>
+                        <span>Infrared</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="flex justify-between items-center">
+                        <span class="stat-label text-blue-300">Intensity</span>
+                        <span id="intensity-val" class="stat-value text-blue-400">1</span>
+                    </div>
+                    <input type="range" id="intensity-slider" min="1" max="10" step="1" value="1">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="simCanvas"></canvas>
+
+    <script>
+        (function() {
+            // Wait for DOM to be ready
+            const getEl = (id) => document.getElementById(id);
+
+            // Physics Constants
+            const H = 4.135667696e-15; // Planck's constant in eV?s
+            const C = 299792458; // Speed of light in m/s
+            let wavelength = 550; // nm
+            let workFunction = 1.95;
+            let intensity = 1;
+            
+            let canvas, ctx, videoElement, startBtn, resetBtn, powerIndicator, trackingStatus, gestureIndicator;
+            let width, height;
+            let isRunning = false;
+            let isFlicking = false; 
+            let isHandDetected = false;
+            let targetPoint = { x: 0, y: 0 };
+            let laserPos = { x: 0, y: 120 };
+            
+            let photons = [];
+            let electrons = [];
+            let plateY;
+            let flashOpacity = 0;
+            let fireTimer = 0;
+
+            function init() {
+                canvas = getEl('simCanvas');
+                ctx = canvas.getContext('2d');
+                videoElement = getEl('video-preview');
+                startBtn = getEl('start-btn');
+                resetBtn = getEl('reset-btn');
+                powerIndicator = getEl('power-indicator');
+                trackingStatus = getEl('tracking-status');
+                gestureIndicator = getEl('gesture-indicator');
+
+                resize();
+                window.addEventListener('resize', resize);
+                
+                window.addEventListener('mousedown', () => { if (!isHandDetected && isRunning) isFlicking = true; });
+                window.addEventListener('mouseup', () => { if (!isHandDetected) isFlicking = false; });
+                window.addEventListener('mousemove', (e) => {
+                    if (!isHandDetected) {
+                        targetPoint.x = e.clientX;
+                        targetPoint.y = e.clientY;
+                    }
+                });
+
+                startBtn.addEventListener('click', () => {
+                    isRunning = !isRunning;
+                    startBtn.innerText = isRunning ? "Power Down" : "Initialize";
+                    startBtn.className = isRunning ? "btn btn-secondary" : "btn btn-primary";
+                    powerIndicator.className = isRunning ? "w-2 h-2 rounded-full bg-indigo-500 animate-pulse" : "w-2 h-2 rounded-full bg-slate-600";
+                    updateStats();
+                });
+
+                resetBtn.addEventListener('click', () => {
+                    photons = []; electrons = []; flashOpacity = 0;
+                    isRunning = false;
+                    startBtn.innerText = "Initialize";
+                    startBtn.className = "btn btn-primary";
+                    powerIndicator.className = "w-2 h-2 rounded-full bg-slate-600";
+                    wavelength = 550;
+                    getEl('wavelength-slider').value = 550;
+                    updateStats();
+                });
+
+                getEl('wavelength-slider').addEventListener('input', (e) => {
+                    wavelength = parseFloat(e.target.value);
+                    updateStats();
+                });
+
+                getEl('intensity-slider').addEventListener('input', (e) => {
+                    intensity = parseInt(e.target.value);
+                    const intensityValEl = getEl('intensity-val');
+                    if(intensityValEl) intensityValEl.innerText = intensity;
+                    updateStats();
+                });
+
+                getEl('metal-selector').addEventListener('change', (e) => {
+                    workFunction = parseFloat(e.target.value);
+                    updateStats();
+                });
+
+                // Start Hand Tracking Camera
+                const camera = new Camera(videoElement, {
+                    onFrame: async () => {
+                        await hands.send({image: videoElement});
+                    },
+                    width: 640,
+                    height: 480
+                });
+                camera.start();
+
+                updateStats();
+                requestAnimationFrame(animate);
+            }
+
+            // MediaPipe Setup
+            const hands = new Hands({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+            });
+
+            hands.setOptions({
+                maxNumHands: 1,
+                modelComplexity: 1,
+                minDetectionConfidence: 0.5,
+                minTrackingConfidence: 0.5
+            });
+
+            hands.onResults(onResults);
+
+            function onResults(results) {
+                if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                    isHandDetected = true;
+                    const hand = results.multiHandLandmarks[0];
+                    const indexTip = hand[8];
+                    const indexPip = hand[6];
+                    const wrist = hand[0];
+
+                    targetPoint.x = (1 - indexTip.x) * width;
+                    targetPoint.y = indexTip.y * height;
+                    
+                    const dTip = Math.sqrt(Math.pow(indexTip.x - wrist.x, 2) + Math.pow(indexTip.y - wrist.y, 2));
+                    const dPip = Math.sqrt(Math.pow(indexPip.x - wrist.x, 2) + Math.pow(indexPip.y - wrist.y, 2));
+                    
+                    isFlicking = dTip > dPip + 0.05;
+
+                    if (trackingStatus) {
+                        trackingStatus.innerText = "Control: Optical Guidance Active";
+                        trackingStatus.classList.add('text-indigo-400');
+                    }
+                    
+                    if (gestureIndicator) {
+                        if (isFlicking) {
+                            gestureIndicator.innerText = "Trigger Down";
+                            gestureIndicator.className = "gesture-badge bg-indigo-500 text-white";
+                        } else {
+                            gestureIndicator.innerText = "Safety On";
+                            gestureIndicator.className = "gesture-badge bg-slate-700 text-slate-400";
+                        }
+                    }
+                } else {
+                    isHandDetected = false;
+                    isFlicking = false;
+                    if (trackingStatus) {
+                        trackingStatus.innerText = "Control: Manual Override (Mouse)";
+                        trackingStatus.classList.remove('text-indigo-400');
+                    }
+                    if (gestureIndicator) {
+                        gestureIndicator.innerText = "Standby";
+                        gestureIndicator.className = "gesture-badge bg-slate-800 text-slate-500";
+                    }
+                }
+            }
+
+            function resize() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                if (canvas) {
+                    canvas.width = width;
+                    canvas.height = height;
+                }
+                plateY = height - 240;
+                laserPos.x = width / 2;
+            }
+
+            function updateStats() {
+                const metalSelector = getEl('metal-selector');
+                if (!metalSelector) return;
+
+                const metalName = metalSelector.options[metalSelector.selectedIndex].text.split('(')[0].trim();
+                
+                const curMetal = getEl('current-metal');
+                const curIntensity = getEl('current-intensity');
+                const waveVal = getEl('wavelength-val');
+                const photonEnergyEl = getEl('photon-energy');
+                const electronKeEl = getEl('electron-ke');
+                const curFreqEl = getEl('current-freq');
+                const statusMsg = getEl('status-msg');
+
+                if (curMetal) curMetal.innerText = `${metalName} (${workFunction} eV)`;
+                if (curIntensity) curIntensity.innerText = `${intensity} ph/pulse`;
+                if (waveVal) waveVal.innerText = `${wavelength.toFixed(0)} nm`;
+
+                const f = C / (wavelength * 1e-9);
+                const photonEnergy = H * f;
+                const ke = photonEnergy - workFunction;
+
+                if (!isRunning) {
+                    if (photonEnergyEl) photonEnergyEl.innerText = "--";
+                    if (electronKeEl) electronKeEl.innerText = "--";
+                    if (curFreqEl) curFreqEl.innerText = "--";
+                    if (statusMsg) {
+                        statusMsg.innerText = "System Idle";
+                        statusMsg.style.color = "#94a3b8";
+                    }
+                    return;
+                }
+                
+                if (photonEnergyEl) photonEnergyEl.innerText = `${photonEnergy.toFixed(2)} eV`;
+                if (curFreqEl) curFreqEl.innerText = `${(f/1e14).toFixed(2)}e14 Hz`;
+                
+                if (electronKeEl) {
+                    if (ke > 0) {
+                        electronKeEl.innerText = `${ke.toFixed(2)} eV`;
+                        electronKeEl.className = "text-emerald-400 font-mono font-bold";
+                    } else {
+                        electronKeEl.innerText = "0.00 eV";
+                        electronKeEl.className = "text-rose-400 font-mono font-bold";
+                    }
+                }
+
+                if (statusMsg) {
+                    if (ke > 0) {
+                        statusMsg.innerText = "Quantum Emission Active";
+                        statusMsg.style.color = "#10b981";
+                    } else {
+                        statusMsg.innerText = "Energy Below Threshold";
+                        statusMsg.style.color = "#f43f5e";
+                    }
+                }
+            }
+
+            function getLaserColor() {
+                if (wavelength < 380) return `hsl(280, 100%, 70%)`; 
+                if (wavelength > 750) return `hsl(0, 100%, 30%)`;  
+                const hue = 280 * (1 - (wavelength - 380) / (750 - 380));
+                return `hsl(${hue}, 100%, 60%)`;
+            }
+
+            function firePhoton() {
+                const angle = Math.atan2(targetPoint.y - laserPos.y, targetPoint.x - laserPos.x);
+                photons.push({
+                    x: laserPos.x,
+                    y: laserPos.y,
+                    vx: Math.cos(angle) * 16,
+                    vy: Math.sin(angle) * 16,
+                    color: getLaserColor()
+                });
+            }
+
+            function emitElectron(x) {
+                const f = C / (wavelength * 1e-9);
+                const ke = (H * f) - workFunction;
+                if (ke <= 0) return;
+
+                const speed = 2 + (ke * 6);
+                electrons.push({
+                    x: x,
+                    y: plateY,
+                    vx: (Math.random() - 0.5) * 5,
+                    vy: -speed,
+                    life: 1.0
+                });
+                flashOpacity = 0.4;
+            }
+
+            function animate(time) {
+                if (!ctx) return;
+                
+                ctx.fillStyle = '#0a0a12';
+                ctx.fillRect(0, 0, width, height);
+
+                if (isRunning && isFlicking) {
+                    const fireRate = Math.max(2, 22 - (intensity * 2)); 
+                    if (time > fireTimer) {
+                        firePhoton();
+                        fireTimer = time + fireRate;
+                    }
+                }
+
+                const grad = ctx.createLinearGradient(0, plateY, 0, plateY + 80);
+                grad.addColorStop(0, `rgba(99, 102, 241, ${0.1 + flashOpacity})`);
+                grad.addColorStop(1, 'rgba(15, 23, 42, 0)');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, plateY, width, 120);
+                if (flashOpacity > 0) flashOpacity -= 0.04;
+
+                ctx.beginPath();
+                ctx.moveTo(0, plateY);
+                ctx.lineTo(width, plateY);
+                ctx.strokeStyle = isRunning ? '#6366f1' : '#334155';
+                ctx.lineWidth = 6;
+                ctx.stroke();
+
+                laserPos.x += (width/2 - laserPos.x) * 0.1;
+                const angle = Math.atan2(targetPoint.y - laserPos.y, targetPoint.x - laserPos.x);
+                ctx.save();
+                ctx.translate(laserPos.x, laserPos.y);
+                ctx.rotate(angle);
+                
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(-30, -18, 60, 36);
+                ctx.strokeStyle = isFlicking ? getLaserColor() : '#6366f1';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(-30, -18, 60, 36);
+                
+                if (isRunning) {
+                    ctx.fillStyle = getLaserColor();
+                    ctx.fillRect(25, -6, 10, 12);
+                    ctx.beginPath();
+                    ctx.moveTo(30, 0);
+                    ctx.lineTo(2500, 0);
+                    ctx.strokeStyle = getLaserColor();
+                    ctx.globalAlpha = isFlicking ? 0.2 : 0.05;
+                    ctx.stroke();
+                }
+                ctx.restore();
+
+                for (let i = photons.length - 1; i >= 0; i--) {
+                    const p = photons[i];
+                    p.x += p.vx; p.y += p.vy;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.shadowBlur = 15; ctx.shadowColor = p.color;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    if (p.y >= plateY) { emitElectron(p.x); photons.splice(i, 1); }
+                    else if (p.x < 0 || p.x > width || p.y < 0) photons.splice(i, 1);
+                }
+
+                for (let i = electrons.length - 1; i >= 0; i--) {
+                    const e = electrons[i];
+                    e.x += e.vx; e.y += e.vy;
+                    e.life -= 0.015;
+                    ctx.beginPath();
+                    ctx.arc(e.x, e.y, 4, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(16, 233, 161, ${e.life})`;
+                    ctx.fill();
+                    if (e.life <= 0 || e.y < 0) electrons.splice(i, 1);
+                }
+
+                requestAnimationFrame(animate);
+            }
+
+            // Start when window is ready
+            window.addEventListener('load', init);
+        })();
+    </script>
+
+    </div>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script>
+        (function() {
+            // Wait for DOM to be ready
+            const getEl = (id) => document.getElementById(id);
+
+            // Physics Constants
+            const H = 4.135667696e-15; // Planck's constant in eV?s
+            const C = 299792458; // Speed of light in m/s
+            let wavelength = 550; // nm
+            let workFunction = 1.95;
+            let intensity = 1;
+            
+            let canvas, ctx, videoElement, startBtn, resetBtn, powerIndicator, trackingStatus, gestureIndicator;
+            let width, height;
+            let isRunning = false;
+            let isFlicking = false; 
+            let isHandDetected = false;
+            let targetPoint = { x: 0, y: 0 };
+            let laserPos = { x: 0, y: 120 };
+            
+            let photons = [];
+            let electrons = [];
+            let plateY;
+            let flashOpacity = 0;
+            let fireTimer = 0;
+
+            function init() {
+                canvas = getEl('simCanvas');
+                ctx = canvas.getContext('2d');
+                videoElement = getEl('video-preview');
+                startBtn = getEl('start-btn');
+                resetBtn = getEl('reset-btn');
+                powerIndicator = getEl('power-indicator');
+                trackingStatus = getEl('tracking-status');
+                gestureIndicator = getEl('gesture-indicator');
+
+                resize();
+                window.addEventListener('resize', resize);
+                
+                window.addEventListener('mousedown', () => { if (!isHandDetected && isRunning) isFlicking = true; });
+                window.addEventListener('mouseup', () => { if (!isHandDetected) isFlicking = false; });
+                window.addEventListener('mousemove', (e) => {
+                    if (!isHandDetected) {
+                        targetPoint.x = e.clientX;
+                        targetPoint.y = e.clientY;
+                    }
+                });
+
+                startBtn.addEventListener('click', () => {
+                    isRunning = !isRunning;
+                    startBtn.innerText = isRunning ? "Power Down" : "Initialize";
+                    startBtn.className = isRunning ? "btn btn-secondary" : "btn btn-primary";
+                    powerIndicator.className = isRunning ? "w-2 h-2 rounded-full bg-indigo-500 animate-pulse" : "w-2 h-2 rounded-full bg-slate-600";
+                    updateStats();
+                });
+
+                resetBtn.addEventListener('click', () => {
+                    photons = []; electrons = []; flashOpacity = 0;
+                    isRunning = false;
+                    startBtn.innerText = "Initialize";
+                    startBtn.className = "btn btn-primary";
+                    powerIndicator.className = "w-2 h-2 rounded-full bg-slate-600";
+                    wavelength = 550;
+                    getEl('wavelength-slider').value = 550;
+                    updateStats();
+                });
+
+                getEl('wavelength-slider').addEventListener('input', (e) => {
+                    wavelength = parseFloat(e.target.value);
+                    updateStats();
+                });
+
+                getEl('intensity-slider').addEventListener('input', (e) => {
+                    intensity = parseInt(e.target.value);
+                    const intensityValEl = getEl('intensity-val');
+                    if(intensityValEl) intensityValEl.innerText = intensity;
+                    updateStats();
+                });
+
+                getEl('metal-selector').addEventListener('change', (e) => {
+                    workFunction = parseFloat(e.target.value);
+                    updateStats();
+                });
+
+                // Start Hand Tracking Camera
+                const camera = new Camera(videoElement, {
+                    onFrame: async () => {
+                        await hands.send({image: videoElement});
+                    },
+                    width: 640,
+                    height: 480
+                });
+                camera.start();
+
+                updateStats();
+                requestAnimationFrame(animate);
+            }
+
+            // MediaPipe Setup
+            const hands = new Hands({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+            });
+
+            hands.setOptions({
+                maxNumHands: 1,
+                modelComplexity: 1,
+                minDetectionConfidence: 0.5,
+                minTrackingConfidence: 0.5
+            });
+
+            hands.onResults(onResults);
+
+            function onResults(results) {
+                if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                    isHandDetected = true;
+                    const hand = results.multiHandLandmarks[0];
+                    const indexTip = hand[8];
+                    const indexPip = hand[6];
+                    const wrist = hand[0];
+
+                    targetPoint.x = (1 - indexTip.x) * width;
+                    targetPoint.y = indexTip.y * height;
+                    
+                    const dTip = Math.sqrt(Math.pow(indexTip.x - wrist.x, 2) + Math.pow(indexTip.y - wrist.y, 2));
+                    const dPip = Math.sqrt(Math.pow(indexPip.x - wrist.x, 2) + Math.pow(indexPip.y - wrist.y, 2));
+                    
+                    isFlicking = dTip > dPip + 0.05;
+
+                    if (trackingStatus) {
+                        trackingStatus.innerText = "Control: Optical Guidance Active";
+                        trackingStatus.classList.add('text-indigo-400');
+                    }
+                    
+                    if (gestureIndicator) {
+                        if (isFlicking) {
+                            gestureIndicator.innerText = "Trigger Down";
+                            gestureIndicator.className = "gesture-badge bg-indigo-500 text-white";
+                        } else {
+                            gestureIndicator.innerText = "Safety On";
+                            gestureIndicator.className = "gesture-badge bg-slate-700 text-slate-400";
+                        }
+                    }
+                } else {
+                    isHandDetected = false;
+                    isFlicking = false;
+                    if (trackingStatus) {
+                        trackingStatus.innerText = "Control: Manual Override (Mouse)";
+                        trackingStatus.classList.remove('text-indigo-400');
+                    }
+                    if (gestureIndicator) {
+                        gestureIndicator.innerText = "Standby";
+                        gestureIndicator.className = "gesture-badge bg-slate-800 text-slate-500";
+                    }
+                }
+            }
+
+            function resize() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                if (canvas) {
+                    canvas.width = width;
+                    canvas.height = height;
+                }
+                plateY = height - 240;
+                laserPos.x = width / 2;
+            }
+
+            function updateStats() {
+                const metalSelector = getEl('metal-selector');
+                if (!metalSelector) return;
+
+                const metalName = metalSelector.options[metalSelector.selectedIndex].text.split('(')[0].trim();
+                
+                const curMetal = getEl('current-metal');
+                const curIntensity = getEl('current-intensity');
+                const waveVal = getEl('wavelength-val');
+                const photonEnergyEl = getEl('photon-energy');
+                const electronKeEl = getEl('electron-ke');
+                const curFreqEl = getEl('current-freq');
+                const statusMsg = getEl('status-msg');
+
+                if (curMetal) curMetal.innerText = `${metalName} (${workFunction} eV)`;
+                if (curIntensity) curIntensity.innerText = `${intensity} ph/pulse`;
+                if (waveVal) waveVal.innerText = `${wavelength.toFixed(0)} nm`;
+
+                const f = C / (wavelength * 1e-9);
+                const photonEnergy = H * f;
+                const ke = photonEnergy - workFunction;
+
+                if (!isRunning) {
+                    if (photonEnergyEl) photonEnergyEl.innerText = "--";
+                    if (electronKeEl) electronKeEl.innerText = "--";
+                    if (curFreqEl) curFreqEl.innerText = "--";
+                    if (statusMsg) {
+                        statusMsg.innerText = "System Idle";
+                        statusMsg.style.color = "#94a3b8";
+                    }
+                    return;
+                }
+                
+                if (photonEnergyEl) photonEnergyEl.innerText = `${photonEnergy.toFixed(2)} eV`;
+                if (curFreqEl) curFreqEl.innerText = `${(f/1e14).toFixed(2)}e14 Hz`;
+                
+                if (electronKeEl) {
+                    if (ke > 0) {
+                        electronKeEl.innerText = `${ke.toFixed(2)} eV`;
+                        electronKeEl.className = "text-emerald-400 font-mono font-bold";
+                    } else {
+                        electronKeEl.innerText = "0.00 eV";
+                        electronKeEl.className = "text-rose-400 font-mono font-bold";
+                    }
+                }
+
+                if (statusMsg) {
+                    if (ke > 0) {
+                        statusMsg.innerText = "Quantum Emission Active";
+                        statusMsg.style.color = "#10b981";
+                    } else {
+                        statusMsg.innerText = "Energy Below Threshold";
+                        statusMsg.style.color = "#f43f5e";
+                    }
+                }
+            }
+
+            function getLaserColor() {
+                if (wavelength < 380) return `hsl(280, 100%, 70%)`; 
+                if (wavelength > 750) return `hsl(0, 100%, 30%)`;  
+                const hue = 280 * (1 - (wavelength - 380) / (750 - 380));
+                return `hsl(${hue}, 100%, 60%)`;
+            }
+
+            function firePhoton() {
+                const angle = Math.atan2(targetPoint.y - laserPos.y, targetPoint.x - laserPos.x);
+                photons.push({
+                    x: laserPos.x,
+                    y: laserPos.y,
+                    vx: Math.cos(angle) * 16,
+                    vy: Math.sin(angle) * 16,
+                    color: getLaserColor()
+                });
+            }
+
+            function emitElectron(x) {
+                const f = C / (wavelength * 1e-9);
+                const ke = (H * f) - workFunction;
+                if (ke <= 0) return;
+
+                const speed = 2 + (ke * 6);
+                electrons.push({
+                    x: x,
+                    y: plateY,
+                    vx: (Math.random() - 0.5) * 5,
+                    vy: -speed,
+                    life: 1.0
+                });
+                flashOpacity = 0.4;
+            }
+
+            function animate(time) {
+                if (!ctx) return;
+                
+                ctx.fillStyle = '#0a0a12';
+                ctx.fillRect(0, 0, width, height);
+
+                if (isRunning && isFlicking) {
+                    const fireRate = Math.max(2, 22 - (intensity * 2)); 
+                    if (time > fireTimer) {
+                        firePhoton();
+                        fireTimer = time + fireRate;
+                    }
+                }
+
+                const grad = ctx.createLinearGradient(0, plateY, 0, plateY + 80);
+                grad.addColorStop(0, `rgba(99, 102, 241, ${0.1 + flashOpacity})`);
+                grad.addColorStop(1, 'rgba(15, 23, 42, 0)');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, plateY, width, 120);
+                if (flashOpacity > 0) flashOpacity -= 0.04;
+
+                ctx.beginPath();
+                ctx.moveTo(0, plateY);
+                ctx.lineTo(width, plateY);
+                ctx.strokeStyle = isRunning ? '#6366f1' : '#334155';
+                ctx.lineWidth = 6;
+                ctx.stroke();
+
+                laserPos.x += (width/2 - laserPos.x) * 0.1;
+                const angle = Math.atan2(targetPoint.y - laserPos.y, targetPoint.x - laserPos.x);
+                ctx.save();
+                ctx.translate(laserPos.x, laserPos.y);
+                ctx.rotate(angle);
+                
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(-30, -18, 60, 36);
+                ctx.strokeStyle = isFlicking ? getLaserColor() : '#6366f1';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(-30, -18, 60, 36);
+                
+                if (isRunning) {
+                    ctx.fillStyle = getLaserColor();
+                    ctx.fillRect(25, -6, 10, 12);
+                    ctx.beginPath();
+                    ctx.moveTo(30, 0);
+                    ctx.lineTo(2500, 0);
+                    ctx.strokeStyle = getLaserColor();
+                    ctx.globalAlpha = isFlicking ? 0.2 : 0.05;
+                    ctx.stroke();
+                }
+                ctx.restore();
+
+                for (let i = photons.length - 1; i >= 0; i--) {
+                    const p = photons[i];
+                    p.x += p.vx; p.y += p.vy;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.shadowBlur = 15; ctx.shadowColor = p.color;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    if (p.y >= plateY) { emitElectron(p.x); photons.splice(i, 1); }
+                    else if (p.x < 0 || p.x > width || p.y < 0) photons.splice(i, 1);
+                }
+
+                for (let i = electrons.length - 1; i >= 0; i--) {
+                    const e = electrons[i];
+                    e.x += e.vx; e.y += e.vy;
+                    e.life -= 0.015;
+                    ctx.beginPath();
+                    ctx.arc(e.x, e.y, 4, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(16, 233, 161, ${e.life})`;
+                    ctx.fill();
+                    if (e.life <= 0 || e.y < 0) electrons.splice(i, 1);
+                }
+
+                requestAnimationFrame(animate);
+            }
+
+            // Start when window is ready
+            window.addEventListener('load', init);
+        })();
+    </script>
+</body>
+</html>
