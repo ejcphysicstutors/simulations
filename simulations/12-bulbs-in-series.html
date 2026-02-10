@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>12 bulbs in series</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        .ejc-credit-banner {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            padding: 12px 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 10000;
+        }
+        
+        .ejc-credit-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .ejc-credit-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .ejc-credit-author {
+            font-size: 14px;
+            opacity: 0.95;
+        }
+        
+        .ejc-credit-author strong {
+            font-weight: 600;
+            color: #fbbf24;
+        }
+    </style>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            user-select: none;
+        }
+        h1 { color: #333; margin-bottom: 10px; text-align: center; }
+        .controls {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: #0056b3; }
+        button.off { background-color: #dc3545; }
+        
+        /* AI Button Styles */
+        button.ai-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: bold;
+        }
+        button.ai-btn:hover {
+            filter: brightness(1.1);
+        }
+
+        label { font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 8px;}
+        
+        /* Responsive Canvas Container */
+        #canvas-container {
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            background: white;
+            width: 100%;
+            max-width: 900px; /* Cap width at native resolution */
+        }
+        canvas { 
+            background-color: #fff; 
+            cursor: crosshair; 
+            display: block;
+            width: 100%;  /* Scale to fit container */
+            height: auto; /* Maintain aspect ratio */
+        }
+
+        .legend {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #666;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            align-items: center;
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        .legend-row { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; }
+        .voltmeter-lcd {
+            font-family: Arial, sans-serif;
+            font-size: 20px;
+            background: #222;
+            color: #0f0;
+            padding: 5px 15px;
+            border-radius: 4px;
+            border: 3px solid #555;
+            min-width: 130px;
+            text-align: right;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+        }
+
+        /* AI Panel Styles */
+        .ai-panel {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
+        }
+        .ai-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .ai-title { font-size: 1.2rem; font-weight: bold; color: #4a4a4a; display: flex; align-items: center; gap: 8px;}
+        .ai-content {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            min-height: 80px;
+            line-height: 1.5;
+            color: #333;
+            white-space: pre-wrap;
+            border-left: 4px solid #764ba2;
+        }
+        .loading { color: #666; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="ejc-credit-banner">
+        <div class="ejc-credit-content">
+            <div class="ejc-credit-title">12 bulbs in series</div>
+            <div class="ejc-credit-author">Created by <strong>Seetoh Huixia</strong> | EJC Physics</div>
+        </div>
+    </div>
+    
+    <div class="ejc-simulation-container">
+        
+
+    <h1>Series Circuit Simulator (Square Config)</h1>
+
+    <div class="controls">
+        <button id="powerBtn" onclick="togglePower()">Turn On</button>
+        <label>
+            <input type="checkbox" id="showPotentials" onchange="draw()"> 
+            Show Voltage Colors
+        </label>
+        <div id="voltmeter-display" class="voltmeter-lcd">
+            0.0 V
+        </div>
+    </div>
+
+    <div id="canvas-container">
+        <canvas id="simCanvas" width="900" height="600"></canvas>
+    </div>
+
+    <div class="legend">
+        <div class="legend-row"><strong>Controls:</strong></div>
+        <div class="legend-row">
+            <span>?? <strong>Left Click (Bulb/Wire):</strong> Break Circuit (Open)</span>
+            <span>?? <strong>Right Click (Bulb):</strong> Short Circuit (Bypass)</span>
+        </div>
+        <div class="legend-row">
+            <span>? <strong>Voltmeter:</strong> Drag Red/Black Probes to dots to measure.</span>
+        </div>
+    </div>
+
+    <!-- AI Tutor Section -->
+    <div class="ai-panel">
+        <div class="ai-header">
+            <div class="ai-title">? AI Physics Tutor</div>
+            <div style="display: flex; gap: 10px;">
+                <button class="ai-btn" onclick="askGeminiAnalysis()">Explain This Circuit ?</button>
+                <button class="ai-btn" onclick="askGeminiQuiz()">Quiz Me ?</button>
+            </div>
+        </div>
+        <div id="ai-response" class="ai-content">Click "Explain This Circuit" to analyze the current state or "Quiz Me" for a question!</div>
+    </div>
+
+<script>
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    const display = document.getElementById('voltmeter-display');
+    const powerBtn = document.getElementById('powerBtn');
+
+    // --- State ---
+    let powerOn = false;
+    let showColors = false;
+    const supplyVoltage = 240;
+    
+    // 12 Bulbs. State: 0 = Normal, 1 = Open (Blown), 2 = Shorted
+    const bulbs = Array(12).fill().map((_, i) => ({ id: i, state: 0 }));
+
+    // 13 Wire Segments (connecting nodes/bulbs)
+    const wires = Array(13).fill().map((_, i) => ({ id: i, open: false }));
+    
+    // Nodes represent the connection points
+    // Node 0: Top Left. Node 4: Bottom Left. Node 8: Bottom Right. Node 12: Top Right.
+    let nodeVoltages = new Array(13).fill(null);
+
+    // Probes position - Initialize in center
+    let probes = {
+        red: { node: -1, x: 420, y: 300, dragging: false },
+        black: { node: -1, x: 480, y: 300, dragging: false }
+    };
+
+    // --- Physics Logic ---
+    function calculatePhysics() {
+        if (!powerOn) {
+            nodeVoltages.fill(null);
+            return;
+        }
+
+        let breakIndex = -1;
+        for(let i=0; i<13; i++) { if(wires[i].open) { breakIndex = i; break; } }
+        if(breakIndex === -1) {
+            for(let i=0; i<12; i++) { if(bulbs[i].state === 1) { breakIndex = 100+i; break; } }
+        }
+
+        if (breakIndex !== -1) {
+            nodeVoltages.fill(null);
+            
+            // Forward Pass from Source+ (Node 0)
+            nodeVoltages[0] = 240;
+            for (let i = 0; i < 12; i++) {
+                let intact = true;
+                if (wires[i].open) intact = false;
+                if (bulbs[i].state === 1) intact = false;
+                if (i === 11 && wires[12].open) intact = false;
+                
+                if (intact) nodeVoltages[i+1] = 240;
+                else break;
+            }
+
+            // Backward Pass from Source- (Node 12)
+            nodeVoltages[12] = 0;
+            for (let i = 11; i >= 0; i--) {
+                let intact = true;
+                if (wires[i].open) intact = false;
+                if (bulbs[i].state === 1) intact = false;
+                if (i === 11 && wires[12].open) intact = false;
+
+                if (intact) nodeVoltages[i] = 0;
+                else break;
+            }
+        } 
+        else {
+            const totalResistanceCount = bulbs.filter(b => b.state === 0).length;
+            
+            if (totalResistanceCount === 0) {
+                 nodeVoltages.fill(240);
+                 nodeVoltages[12] = 0; 
+            } else {
+                 const voltageDropPerBulb = supplyVoltage / totalResistanceCount;
+                 let currentV = supplyVoltage;
+                 
+                 nodeVoltages[0] = supplyVoltage;
+                 for (let i = 0; i < 12; i++) {
+                     const bulb = bulbs[i];
+                     if (bulb.state === 0) currentV -= voltageDropPerBulb;
+                     nodeVoltages[i+1] = Math.max(0, currentV);
+                 }
+                 nodeVoltages[12] = 0;
+            }
+        }
+    }
+
+    // --- Interaction ---
+    function togglePower() {
+        powerOn = !powerOn;
+        powerBtn.innerText = powerOn ? "Turn Off" : "Turn On";
+        powerBtn.className = powerOn ? "off" : ";
+        draw();
+    }
+
+    function getBulbAt(x, y) {
+        for (let i = 0; i < 12; i++) {
+            const pos = getComponentPos(i);
+            const dx = x - pos.x;
+            const dy = y - pos.y;
+            if (dx*dx + dy*dy < 900) return i; 
+        }
+        return -1;
+    }
+
+    function getWireAt(x, y) {
+        const threshold = 15;
+        for (let i = 0; i < 13; i++) {
+            const segments = getWireRenderSegments(i);
+            for(let seg of segments) {
+                if (distToSegment(x, y, seg.x1, seg.y1, seg.x2, seg.y2) < threshold) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+    
+    function getClosestNode(x, y) {
+        let minDist = 40; 
+        let closest = -1;
+        for(let i=0; i<=12; i++) {
+            const pos = getNodePos(i);
+            const dist = Math.sqrt((x-pos.x)**2 + (y-pos.y)**2);
+            if (dist < minDist) {
+                minDist = dist;
+                closest = i;
+            }
+        }
+        return closest;
+    }
+
+    // --- Coordinates & Layout ---
+    
+    function getComponentPos(i) {
+        if (i < 4) { 
+            // Left Side (Down)
+            return { x: 150, y: 150 + i * 90 };
+        } else if (i < 8) { 
+            // Bottom Side (Right)
+            return { x: 270 + (i - 4) * 120, y: 500 };
+        } else { 
+            // Right Side (Up)
+            return { x: 750, y: 420 - (i - 8) * 90 };
+        }
+    }
+
+    function getNodePos(i) {
+        if (i < 4) {
+            return { x: 150, y: 100 + i * 90 };
+        } else if (i === 4) {
+            return { x: 150, y: 500 }; 
+        } else if (i < 8) {
+            return { x: 330 + (i-5) * 120, y: 500 };
+        } else if (i === 8) {
+            return { x: 750, y: 500 };
+        } else if (i <= 11) {
+            return { x: 750, y: 465 - (i-8) * 90 };
+        } else {
+            return { x: 750, y: 100 };
+        }
+    }
+
+    function getWireRenderSegments(i) {
+        let segments = [];
+        
+        if (i === 0) {
+            segments.push({x1: 150, y1: 100, x2: 150, y2: 130});
+        } 
+        else if (i < 4) {
+            let bPrev = getComponentPos(i-1);
+            let bCurr = getComponentPos(i);
+            let node = getNodePos(i); 
+            segments.push({x1: bPrev.x, y1: bPrev.y+20, x2: node.x, y2: node.y});
+            segments.push({x1: node.x, y1: node.y, x2: bCurr.x, y2: bCurr.y-20});
+        }
+        else if (i === 4) {
+            let b3 = getComponentPos(3);
+            let b4 = getComponentPos(4);
+            let n4 = getNodePos(4);
+            segments.push({x1: b3.x, y1: b3.y+20, x2: n4.x, y2: n4.y});
+            segments.push({x1: n4.x, y1: n4.y, x2: b4.x-20, y2: b4.y});
+        }
+        else if (i < 8) {
+            let bPrev = getComponentPos(i-1);
+            let bCurr = getComponentPos(i);
+            let node = getNodePos(i);
+            segments.push({x1: bPrev.x+20, y1: bPrev.y, x2: node.x, y2: node.y});
+            segments.push({x1: node.x, y1: node.y, x2: bCurr.x-20, y2: bCurr.y});
+        }
+        else if (i === 8) {
+            let b7 = getComponentPos(7);
+            let b8 = getComponentPos(8);
+            let n8 = getNodePos(8);
+            segments.push({x1: b7.x+20, y1: b7.y, x2: n8.x, y2: n8.y});
+            segments.push({x1: n8.x, y1: n8.y, x2: b8.x, y2: b8.y+20});
+        }
+        else if (i < 12) {
+            let bPrev = getComponentPos(i-1);
+            let bCurr = getComponentPos(i);
+            let node = getNodePos(i);
+            segments.push({x1: bPrev.x, y1: bPrev.y-20, x2: node.x, y2: node.y});
+            segments.push({x1: node.x, y1: node.y, x2: bCurr.x, y2: bCurr.y+20});
+        }
+        else if (i === 12) {
+            let b11 = getComponentPos(11);
+            let n12 = getNodePos(12);
+            segments.push({x1: b11.x, y1: b11.y-20, x2: n12.x, y2: n12.y});
+        }
+        return segments;
+    }
+
+    function distToSegment(px, py, x1, y1, x2, y2) {
+        const l2 = (x1 - x2) ** 2 + (y1 - y2) ** 2;
+        if (l2 === 0) return Math.hypot(px - x1, py - y1);
+        let t = ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / l2;
+        t = Math.max(0, Math.min(1, t));
+        return Math.hypot(px - (x1 + t * (x2 - x1)), py - (y1 + t * (y2 - y1)));
+    }
+
+    function getVoltageColor(v) {
+        if (!powerOn) return "#777";
+        if (v === null) return "#ccc";
+        if (!document.getElementById('showPotentials').checked) return "#444";
+        const ratio = Math.max(0, Math.min(1, v / 240));
+        const r = Math.floor(255 * ratio);
+        const b = Math.floor(255 * (1 - ratio));
+        return `rgb(${r}, 20, ${b})`;
+    }
+
+    function draw() {
+        calculatePhysics();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Check if circuit is broken (Any wire open OR Any bulb blown)
+        const isCircuitBroken = wires.some(w => w.open) || bulbs.some(b => b.state === 1);
+
+        // --- Draw Power Supply (Top Center) ---
+        ctx.fillStyle = "#333";
+        ctx.fillRect(400, 20, 100, 60);
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 16px Arial";
+        ctx.fillText("240V DC", 415, 75); 
+        
+        // Terminals
+        ctx.beginPath(); ctx.arc(400, 50, 5, 0, Math.PI*2); ctx.fillStyle="#e74c3c"; ctx.fill(); // +
+        ctx.beginPath(); ctx.arc(500, 50, 5, 0, Math.PI*2); ctx.fillStyle="#3498db"; ctx.fill(); // -
+        
+        // Signs (Inside Box)
+        ctx.font = "bold 24px Arial";
+        ctx.fillStyle = "#e74c3c"; ctx.fillText("+", 405, 55); 
+        ctx.fillStyle = "#3498db"; ctx.fillText("-", 480, 55);
+
+        // Main Supply Wires (Unbreakable)
+        ctx.lineWidth = 5;
+        // Pos to Node 0
+        ctx.strokeStyle = getVoltageColor(nodeVoltages[0]);
+        ctx.beginPath(); ctx.moveTo(400, 50); ctx.lineTo(150, 50); ctx.lineTo(150, 100); ctx.stroke();
+        // Neg to Node 12
+        ctx.strokeStyle = getVoltageColor(nodeVoltages[12]);
+        ctx.beginPath(); ctx.moveTo(500, 50); ctx.lineTo(750, 50); ctx.lineTo(750, 100); ctx.stroke();
+
+
+        // --- Draw Circuit Loop ---
+        for(let i=0; i<13; i++) {
+            const segs = getWireRenderSegments(i);
+            let color = getVoltageColor(nodeVoltages[i]); 
+            if (wires[i].open) color = "#999";
+
+            if (wires[i].open) {
+                let s = segs[0];
+                drawBrokenLine(s.x1, s.y1, s.x2, s.y2, color);
+                for(let k=1; k<segs.length; k++) {
+                    let s2 = segs[k];
+                    drawLine(s2.x1, s2.y1, s2.x2, s2.y2, color);
+                }
+            } else {
+                for(let s of segs) {
+                    drawLine(s.x1, s.y1, s.x2, s.y2, color);
+                }
+            }
+        }
+
+        // --- Draw Bulbs ---
+        for (let i = 0; i < 12; i++) {
+            const center = getComponentPos(i);
+            
+            // Bulb Shell
+            ctx.beginPath();
+            ctx.arc(center.x, center.y, 20, 0, Math.PI*2);
+            ctx.fillStyle = "#fff";
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = "#000";
+            ctx.stroke();
+
+            // Logic for Lit
+            const vIn = nodeVoltages[i]; 
+            const vOut = nodeVoltages[i+1];
+            
+            if (bulbs[i].state === 0) { // Normal
+                // Bulb lit only if circuit unbroken, power on, and voltage difference
+                const isLit = !isCircuitBroken && powerOn && vIn !== null && vOut !== null && Math.abs(vIn - vOut) > 1;
+
+                if (isLit) {
+                    ctx.shadowBlur = 20; 
+                    ctx.shadowColor = "gold";
+                    ctx.strokeStyle = "#ffcc00";
+                } else {
+                    ctx.shadowBlur = 0;
+                    ctx.strokeStyle = "#ccc";
+                }
+                ctx.lineWidth = 3;
+                ctx.beginPath(); 
+                ctx.moveTo(center.x - 12, center.y - 10); ctx.lineTo(center.x, center.y + 10); ctx.lineTo(center.x + 12, center.y - 10);
+                ctx.stroke();
+                ctx.shadowBlur = 0; 
+            } else if (bulbs[i].state === 1) { // Open
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = "#e00";
+                ctx.beginPath(); 
+                ctx.moveTo(center.x - 8, center.y - 8); ctx.lineTo(center.x + 8, center.y + 8);
+                ctx.moveTo(center.x + 8, center.y - 8); ctx.lineTo(center.x - 8, center.y + 8);
+                ctx.stroke();
+            } else { // Short
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = "#00f";
+                ctx.beginPath(); 
+                ctx.moveTo(center.x - 15, center.y); ctx.lineTo(center.x + 15, center.y);
+                ctx.stroke();
+            }
+        }
+
+        // --- Draw Connection Nodes ---
+        for(let i=0; i<=12; i++){
+            const p = getNodePos(i);
+            ctx.fillStyle = "#333";
+            ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill();
+        }
+
+        // --- Draw Multimeter (Center) ---
+        ctx.fillStyle = "#e0e0e0";
+        ctx.fillRect(420, 200, 60, 80);
+        ctx.strokeStyle = "#999"; ctx.lineWidth=2; ctx.strokeRect(420, 200, 60, 80);
+        ctx.fillStyle = "#222";
+        ctx.font = "10px sans-serif";
+        ctx.fillText("METER", 432, 215);
+
+        // Probes
+        drawProbe(probes.red, "red");
+        drawProbe(probes.black, "black");
+        
+        updateMeter();
+    }
+
+    function drawLine(x1, y1, x2, y2, color) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    }
+
+    function drawBrokenLine(x1, y1, x2, y2, color) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 5;
+        const midX = (x1+x2)/2;
+        const midY = (y1+y2)/2;
+        const gap = 15;
+        const angle = Math.atan2(y2-y1, x2-x1);
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        
+        ctx.beginPath();
+        ctx.moveTo(x1, y1); 
+        ctx.lineTo(midX - gap*cos, midY - gap*sin);
+        ctx.lineTo(midX - (gap-5)*cos + 5*sin, midY - (gap-5)*sin - 5*cos);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(midX + (gap-5)*cos - 5*sin, midY + (gap-5)*sin + 5*cos);
+        ctx.lineTo(midX + gap*cos, midY + gap*sin);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+    }
+
+    function drawProbe(probe, color) {
+        const bodyColor = color === 'red' ? '#e74c3c' : '#2c3e50';
+        
+        ctx.beginPath();
+        ctx.strokeStyle = bodyColor;
+        ctx.lineWidth = 4;
+        const meterX = color === 'red' ? 440 : 460;
+        const meterY = 280; // Bottom of meter
+        ctx.moveTo(meterX, meterY);
+        ctx.bezierCurveTo(meterX, meterY + 50, probe.x, probe.y - 50, probe.x, probe.y - 45);
+        ctx.stroke();
+
+        ctx.fillStyle = bodyColor;
+        ctx.beginPath();
+        ctx.moveTo(probe.x - 5, probe.y - 45);
+        ctx.lineTo(probe.x + 5, probe.y - 45);
+        ctx.lineTo(probe.x + 3, probe.y - 5);
+        ctx.lineTo(probe.x - 3, probe.y - 5);
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.fillStyle = "#bdc3c7";
+        ctx.moveTo(probe.x - 3, probe.y - 5);
+        ctx.lineTo(probe.x + 3, probe.y - 5);
+        ctx.lineTo(probe.x, probe.y); 
+        ctx.fill();
+
+        if(probe.dragging) {
+            ctx.strokeStyle = "rgba(0,0,0,0.2)";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(probe.x - 10, probe.y - 50, 20, 55);
+        }
+    }
+
+    function updateMeter() {
+        if (!powerOn) {
+            display.innerText = "0.0 V";
+            display.style.color = "#0f0";
+            return;
+        }
+        
+        const getV = (probe) => {
+            // If dragging or not snapped to a node, treat as undefined connection
+            if (probe.dragging || probe.node === -1) return null;
+            return nodeVoltages[probe.node];
+        };
+
+        const vRed = getV(probes.red);
+        const vBlack = getV(probes.black);
+
+        // If either probe is not connected to a valid voltage source (is null/floating)
+        if (vRed === null || vBlack === null) {
+            display.innerText = "Undefined";
+            display.style.color = "#e74c3c"; // Red to indicate invalid state
+        } else {
+            let diff = vRed - vBlack;
+            display.innerText = diff.toFixed(1) + " V";
+            display.style.color = "#0f0";
+        }
+    }
+
+    // --- GEMINI AI INTEGRATION ---
+
+    const apiKey = "AIzaSyAcBZ6Q24jP-rrWB7451aLs8m6EGddlRgA"; // Environment provided key
+
+    // Helper: Generate description of circuit state
+    function getCircuitState() {
+        const state = {
+            powerOn: powerOn,
+            totalBulbs: 12,
+            supplyVoltage: 240,
+            brokenWires: wires.filter(w => w.open).map(w => w.id),
+            blownBulbs: bulbs.filter(b => b.state === 1).map(b => b.id),
+            shortedBulbs: bulbs.filter(b => b.state === 2).map(b => b.id),
+            voltmeterReading: display.innerText,
+            isCircuitComplete: !wires.some(w => w.open) && !bulbs.some(b => b.state === 1)
+        };
+        return JSON.stringify(state, null, 2);
+    }
+
+    async function callGemini(promptText) {
+        const responseDiv = document.getElementById('ai-response');
+        responseDiv.innerHTML = '<span class="loading">Thinking... ?</span>';
+        
+        try {
+            const response = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{ text: promptText }]
+                        }]
+                    })
+                }
+            );
+
+            if (!response.ok) throw new Error('API call failed');
+            
+            const data = await response.json();
+            const text = data.candidates[0].content.parts[0].text;
+            
+            // Simple markdown-ish bold formatting
+            responseDiv.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        } catch (error) {
+            responseDiv.innerHTML = `<span style="color:red">Error: Could not reach AI Tutor. (${error.message})</span>`;
+        }
+    }
+
+    function askGeminiAnalysis() {
+        const state = getCircuitState();
+        const prompt = `
+            You are a helpful Physics Tutor. Analyze this Series Circuit Simulation state:
+            ${state}
+            
+            Explain briefly (2-3 sentences) what is happening in the circuit regarding current flow and voltage drops.
+            If there are faults (broken wires, blown bulbs), explain why the other bulbs are off and what voltage readings would be expected across the break.
+            Keep it educational and encouraging.
+        `;
+        callGemini(prompt);
+    }
+
+    function askGeminiQuiz() {
+        const prompt = `
+            You are a helpful Physics Tutor. 
+            Generate a single multiple-choice conceptual physics question about Series Circuits, Ohm's Law, or Voltage Drops suitable for a high school student.
+            Provide the question and options first, then reveal the answer at the bottom.
+        `;
+        callGemini(prompt);
+    }
+
+    // --- Event Listeners ---
+    let activeProbe = null;
+    
+    // Helper to get mouse pos relative to canvas, accounting for CSS scaling
+    function getMousePos(evt) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        return {
+            x: (evt.clientX - rect.left) * scaleX,
+            y: (evt.clientY - rect.top) * scaleY
+        };
+    }
+
+    window.addEventListener('mousedown', (e) => {
+        // Only if inside canvas logic check
+        const rect = canvas.getBoundingClientRect();
+        if (e.clientX < rect.left || e.clientX > rect.right || 
+            e.clientY < rect.top || e.clientY > rect.bottom) return;
+            
+        const pos = getMousePos(e);
+        const x = pos.x;
+        const y = pos.y;
+
+        // 1. Probes
+        if (Math.hypot(x - probes.red.x, y - probes.red.y) < 30) {
+            activeProbe = 'red'; probes.red.dragging = true; draw(); return;
+        }
+        if (Math.hypot(x - probes.black.x, y - probes.black.y) < 30) {
+            activeProbe = 'black'; probes.black.dragging = true; draw(); return;
+        }
+
+        // 2. Bulbs
+        const bulbIndex = getBulbAt(x, y);
+        if (bulbIndex !== -1) {
+            if (e.button === 0) bulbs[bulbIndex].state = (bulbs[bulbIndex].state === 1) ? 0 : 1; 
+            else if (e.button === 2) bulbs[bulbIndex].state = (bulbs[bulbIndex].state === 2) ? 0 : 2; 
+            draw();
+            return;
+        }
+        
+        // 3. Wires
+        if (e.button === 0) {
+            const wireIndex = getWireAt(x, y);
+            if (wireIndex !== -1) {
+                wires[wireIndex].open = !wires[wireIndex].open;
+                draw();
+            }
+        }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (!activeProbe) return;
+        const pos = getMousePos(e);
+        
+        // Allow dragging slightly outside the visual canvas area by clamping, but using scaled values
+        probes[activeProbe].x = pos.x;
+        probes[activeProbe].y = pos.y;
+        draw();
+    });
+
+    window.addEventListener('mouseup', (e) => {
+        if (activeProbe) {
+            const pos = getMousePos(e);
+            const x = pos.x;
+            const y = pos.y;
+            
+            const node = getClosestNode(x, y);
+            const nodePos = getNodePos(node);
+            
+            if (node !== -1 && Math.hypot(x - nodePos.x, y - nodePos.y) < 30) {
+                probes[activeProbe].node = node;
+                probes[activeProbe].x = nodePos.x;
+                probes[activeProbe].y = nodePos.y;
+            } else {
+                probes[activeProbe].node = -1;
+            }
+            probes[activeProbe].dragging = false;
+            activeProbe = null;
+            draw();
+        }
+    });
+
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+    draw();
+
+</script>
+
+    </div>
+    
+    <script>
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    const display = document.getElementById('voltmeter-display');
+    const powerBtn = document.getElementById('powerBtn');
+
+    // --- State ---
+    let powerOn = false;
+    let showColors = false;
+    const supplyVoltage = 240;
+    
+    // 12 Bulbs. State: 0 = Normal, 1 = Open (Blown), 2 = Shorted
+    const bulbs = Array(12).fill().map((_, i) => ({ id: i, state: 0 }));
+
+    // 13 Wire Segments (connecting nodes/bulbs)
+    const wires = Array(13).fill().map((_, i) => ({ id: i, open: false }));
+    
+    // Nodes represent the connection points
+    // Node 0: Top Left. Node 4: Bottom Left. Node 8: Bottom Right. Node 12: Top Right.
+    let nodeVoltages = new Array(13).fill(null);
+
+    // Probes position - Initialize in center
+    let probes = {
+        red: { node: -1, x: 420, y: 300, dragging: false },
+        black: { node: -1, x: 480, y: 300, dragging: false }
+    };
+
+    // --- Physics Logic ---
+    function calculatePhysics() {
+        if (!powerOn) {
+            nodeVoltages.fill(null);
+            return;
+        }
+
+        let breakIndex = -1;
+        for(let i=0; i<13; i++) { if(wires[i].open) { breakIndex = i; break; } }
+        if(breakIndex === -1) {
+            for(let i=0; i<12; i++) { if(bulbs[i].state === 1) { breakIndex = 100+i; break; } }
+        }
+
+        if (breakIndex !== -1) {
+            nodeVoltages.fill(null);
+            
+            // Forward Pass from Source+ (Node 0)
+            nodeVoltages[0] = 240;
+            for (let i = 0; i < 12; i++) {
+                let intact = true;
+                if (wires[i].open) intact = false;
+                if (bulbs[i].state === 1) intact = false;
+                if (i === 11 && wires[12].open) intact = false;
+                
+                if (intact) nodeVoltages[i+1] = 240;
+                else break;
+            }
+
+            // Backward Pass from Source- (Node 12)
+            nodeVoltages[12] = 0;
+            for (let i = 11; i >= 0; i--) {
+                let intact = true;
+                if (wires[i].open) intact = false;
+                if (bulbs[i].state === 1) intact = false;
+                if (i === 11 && wires[12].open) intact = false;
+
+                if (intact) nodeVoltages[i] = 0;
+                else break;
+            }
+        } 
+        else {
+            const totalResistanceCount = bulbs.filter(b => b.state === 0).length;
+            
+            if (totalResistanceCount === 0) {
+                 nodeVoltages.fill(240);
+                 nodeVoltages[12] = 0; 
+            } else {
+                 const voltageDropPerBulb = supplyVoltage / totalResistanceCount;
+                 let currentV = supplyVoltage;
+                 
+                 nodeVoltages[0] = supplyVoltage;
+                 for (let i = 0; i < 12; i++) {
+                     const bulb = bulbs[i];
+                     if (bulb.state === 0) currentV -= voltageDropPerBulb;
+                     nodeVoltages[i+1] = Math.max(0, currentV);
+                 }
+                 nodeVoltages[12] = 0;
+            }
+        }
+    }
+
+    // --- Interaction ---
+    function togglePower() {
+        powerOn = !powerOn;
+        powerBtn.innerText = powerOn ? "Turn Off" : "Turn On";
+        powerBtn.className = powerOn ? "off" : ";
+        draw();
+    }
+
+    function getBulbAt(x, y) {
+        for (let i = 0; i < 12; i++) {
+            const pos = getComponentPos(i);
+            const dx = x - pos.x;
+            const dy = y - pos.y;
+            if (dx*dx + dy*dy < 900) return i; 
+        }
+        return -1;
+    }
+
+    function getWireAt(x, y) {
+        const threshold = 15;
+        for (let i = 0; i < 13; i++) {
+            const segments = getWireRenderSegments(i);
+            for(let seg of segments) {
+                if (distToSegment(x, y, seg.x1, seg.y1, seg.x2, seg.y2) < threshold) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+    
+    function getClosestNode(x, y) {
+        let minDist = 40; 
+        let closest = -1;
+        for(let i=0; i<=12; i++) {
+            const pos = getNodePos(i);
+            const dist = Math.sqrt((x-pos.x)**2 + (y-pos.y)**2);
+            if (dist < minDist) {
+                minDist = dist;
+                closest = i;
+            }
+        }
+        return closest;
+    }
+
+    // --- Coordinates & Layout ---
+    
+    function getComponentPos(i) {
+        if (i < 4) { 
+            // Left Side (Down)
+            return { x: 150, y: 150 + i * 90 };
+        } else if (i < 8) { 
+            // Bottom Side (Right)
+            return { x: 270 + (i - 4) * 120, y: 500 };
+        } else { 
+            // Right Side (Up)
+            return { x: 750, y: 420 - (i - 8) * 90 };
+        }
+    }
+
+    function getNodePos(i) {
+        if (i < 4) {
+            return { x: 150, y: 100 + i * 90 };
+        } else if (i === 4) {
+            return { x: 150, y: 500 }; 
+        } else if (i < 8) {
+            return { x: 330 + (i-5) * 120, y: 500 };
+        } else if (i === 8) {
+            return { x: 750, y: 500 };
+        } else if (i <= 11) {
+            return { x: 750, y: 465 - (i-8) * 90 };
+        } else {
+            return { x: 750, y: 100 };
+        }
+    }
+
+    function getWireRenderSegments(i) {
+        let segments = [];
+        
+        if (i === 0) {
+            segments.push({x1: 150, y1: 100, x2: 150, y2: 130});
+        } 
+        else if (i < 4) {
+            let bPrev = getComponentPos(i-1);
+            let bCurr = getComponentPos(i);
+            let node = getNodePos(i); 
+            segments.push({x1: bPrev.x, y1: bPrev.y+20, x2: node.x, y2: node.y});
+            segments.push({x1: node.x, y1: node.y, x2: bCurr.x, y2: bCurr.y-20});
+        }
+        else if (i === 4) {
+            let b3 = getComponentPos(3);
+            let b4 = getComponentPos(4);
+            let n4 = getNodePos(4);
+            segments.push({x1: b3.x, y1: b3.y+20, x2: n4.x, y2: n4.y});
+            segments.push({x1: n4.x, y1: n4.y, x2: b4.x-20, y2: b4.y});
+        }
+        else if (i < 8) {
+            let bPrev = getComponentPos(i-1);
+            let bCurr = getComponentPos(i);
+            let node = getNodePos(i);
+            segments.push({x1: bPrev.x+20, y1: bPrev.y, x2: node.x, y2: node.y});
+            segments.push({x1: node.x, y1: node.y, x2: bCurr.x-20, y2: bCurr.y});
+        }
+        else if (i === 8) {
+            let b7 = getComponentPos(7);
+            let b8 = getComponentPos(8);
+            let n8 = getNodePos(8);
+            segments.push({x1: b7.x+20, y1: b7.y, x2: n8.x, y2: n8.y});
+            segments.push({x1: n8.x, y1: n8.y, x2: b8.x, y2: b8.y+20});
+        }
+        else if (i < 12) {
+            let bPrev = getComponentPos(i-1);
+            let bCurr = getComponentPos(i);
+            let node = getNodePos(i);
+            segments.push({x1: bPrev.x, y1: bPrev.y-20, x2: node.x, y2: node.y});
+            segments.push({x1: node.x, y1: node.y, x2: bCurr.x, y2: bCurr.y+20});
+        }
+        else if (i === 12) {
+            let b11 = getComponentPos(11);
+            let n12 = getNodePos(12);
+            segments.push({x1: b11.x, y1: b11.y-20, x2: n12.x, y2: n12.y});
+        }
+        return segments;
+    }
+
+    function distToSegment(px, py, x1, y1, x2, y2) {
+        const l2 = (x1 - x2) ** 2 + (y1 - y2) ** 2;
+        if (l2 === 0) return Math.hypot(px - x1, py - y1);
+        let t = ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / l2;
+        t = Math.max(0, Math.min(1, t));
+        return Math.hypot(px - (x1 + t * (x2 - x1)), py - (y1 + t * (y2 - y1)));
+    }
+
+    function getVoltageColor(v) {
+        if (!powerOn) return "#777";
+        if (v === null) return "#ccc";
+        if (!document.getElementById('showPotentials').checked) return "#444";
+        const ratio = Math.max(0, Math.min(1, v / 240));
+        const r = Math.floor(255 * ratio);
+        const b = Math.floor(255 * (1 - ratio));
+        return `rgb(${r}, 20, ${b})`;
+    }
+
+    function draw() {
+        calculatePhysics();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Check if circuit is broken (Any wire open OR Any bulb blown)
+        const isCircuitBroken = wires.some(w => w.open) || bulbs.some(b => b.state === 1);
+
+        // --- Draw Power Supply (Top Center) ---
+        ctx.fillStyle = "#333";
+        ctx.fillRect(400, 20, 100, 60);
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 16px Arial";
+        ctx.fillText("240V DC", 415, 75); 
+        
+        // Terminals
+        ctx.beginPath(); ctx.arc(400, 50, 5, 0, Math.PI*2); ctx.fillStyle="#e74c3c"; ctx.fill(); // +
+        ctx.beginPath(); ctx.arc(500, 50, 5, 0, Math.PI*2); ctx.fillStyle="#3498db"; ctx.fill(); // -
+        
+        // Signs (Inside Box)
+        ctx.font = "bold 24px Arial";
+        ctx.fillStyle = "#e74c3c"; ctx.fillText("+", 405, 55); 
+        ctx.fillStyle = "#3498db"; ctx.fillText("-", 480, 55);
+
+        // Main Supply Wires (Unbreakable)
+        ctx.lineWidth = 5;
+        // Pos to Node 0
+        ctx.strokeStyle = getVoltageColor(nodeVoltages[0]);
+        ctx.beginPath(); ctx.moveTo(400, 50); ctx.lineTo(150, 50); ctx.lineTo(150, 100); ctx.stroke();
+        // Neg to Node 12
+        ctx.strokeStyle = getVoltageColor(nodeVoltages[12]);
+        ctx.beginPath(); ctx.moveTo(500, 50); ctx.lineTo(750, 50); ctx.lineTo(750, 100); ctx.stroke();
+
+
+        // --- Draw Circuit Loop ---
+        for(let i=0; i<13; i++) {
+            const segs = getWireRenderSegments(i);
+            let color = getVoltageColor(nodeVoltages[i]); 
+            if (wires[i].open) color = "#999";
+
+            if (wires[i].open) {
+                let s = segs[0];
+                drawBrokenLine(s.x1, s.y1, s.x2, s.y2, color);
+                for(let k=1; k<segs.length; k++) {
+                    let s2 = segs[k];
+                    drawLine(s2.x1, s2.y1, s2.x2, s2.y2, color);
+                }
+            } else {
+                for(let s of segs) {
+                    drawLine(s.x1, s.y1, s.x2, s.y2, color);
+                }
+            }
+        }
+
+        // --- Draw Bulbs ---
+        for (let i = 0; i < 12; i++) {
+            const center = getComponentPos(i);
+            
+            // Bulb Shell
+            ctx.beginPath();
+            ctx.arc(center.x, center.y, 20, 0, Math.PI*2);
+            ctx.fillStyle = "#fff";
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = "#000";
+            ctx.stroke();
+
+            // Logic for Lit
+            const vIn = nodeVoltages[i]; 
+            const vOut = nodeVoltages[i+1];
+            
+            if (bulbs[i].state === 0) { // Normal
+                // Bulb lit only if circuit unbroken, power on, and voltage difference
+                const isLit = !isCircuitBroken && powerOn && vIn !== null && vOut !== null && Math.abs(vIn - vOut) > 1;
+
+                if (isLit) {
+                    ctx.shadowBlur = 20; 
+                    ctx.shadowColor = "gold";
+                    ctx.strokeStyle = "#ffcc00";
+                } else {
+                    ctx.shadowBlur = 0;
+                    ctx.strokeStyle = "#ccc";
+                }
+                ctx.lineWidth = 3;
+                ctx.beginPath(); 
+                ctx.moveTo(center.x - 12, center.y - 10); ctx.lineTo(center.x, center.y + 10); ctx.lineTo(center.x + 12, center.y - 10);
+                ctx.stroke();
+                ctx.shadowBlur = 0; 
+            } else if (bulbs[i].state === 1) { // Open
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = "#e00";
+                ctx.beginPath(); 
+                ctx.moveTo(center.x - 8, center.y - 8); ctx.lineTo(center.x + 8, center.y + 8);
+                ctx.moveTo(center.x + 8, center.y - 8); ctx.lineTo(center.x - 8, center.y + 8);
+                ctx.stroke();
+            } else { // Short
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = "#00f";
+                ctx.beginPath(); 
+                ctx.moveTo(center.x - 15, center.y); ctx.lineTo(center.x + 15, center.y);
+                ctx.stroke();
+            }
+        }
+
+        // --- Draw Connection Nodes ---
+        for(let i=0; i<=12; i++){
+            const p = getNodePos(i);
+            ctx.fillStyle = "#333";
+            ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill();
+        }
+
+        // --- Draw Multimeter (Center) ---
+        ctx.fillStyle = "#e0e0e0";
+        ctx.fillRect(420, 200, 60, 80);
+        ctx.strokeStyle = "#999"; ctx.lineWidth=2; ctx.strokeRect(420, 200, 60, 80);
+        ctx.fillStyle = "#222";
+        ctx.font = "10px sans-serif";
+        ctx.fillText("METER", 432, 215);
+
+        // Probes
+        drawProbe(probes.red, "red");
+        drawProbe(probes.black, "black");
+        
+        updateMeter();
+    }
+
+    function drawLine(x1, y1, x2, y2, color) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    }
+
+    function drawBrokenLine(x1, y1, x2, y2, color) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 5;
+        const midX = (x1+x2)/2;
+        const midY = (y1+y2)/2;
+        const gap = 15;
+        const angle = Math.atan2(y2-y1, x2-x1);
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        
+        ctx.beginPath();
+        ctx.moveTo(x1, y1); 
+        ctx.lineTo(midX - gap*cos, midY - gap*sin);
+        ctx.lineTo(midX - (gap-5)*cos + 5*sin, midY - (gap-5)*sin - 5*cos);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(midX + (gap-5)*cos - 5*sin, midY + (gap-5)*sin + 5*cos);
+        ctx.lineTo(midX + gap*cos, midY + gap*sin);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+    }
+
+    function drawProbe(probe, color) {
+        const bodyColor = color === 'red' ? '#e74c3c' : '#2c3e50';
+        
+        ctx.beginPath();
+        ctx.strokeStyle = bodyColor;
+        ctx.lineWidth = 4;
+        const meterX = color === 'red' ? 440 : 460;
+        const meterY = 280; // Bottom of meter
+        ctx.moveTo(meterX, meterY);
+        ctx.bezierCurveTo(meterX, meterY + 50, probe.x, probe.y - 50, probe.x, probe.y - 45);
+        ctx.stroke();
+
+        ctx.fillStyle = bodyColor;
+        ctx.beginPath();
+        ctx.moveTo(probe.x - 5, probe.y - 45);
+        ctx.lineTo(probe.x + 5, probe.y - 45);
+        ctx.lineTo(probe.x + 3, probe.y - 5);
+        ctx.lineTo(probe.x - 3, probe.y - 5);
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.fillStyle = "#bdc3c7";
+        ctx.moveTo(probe.x - 3, probe.y - 5);
+        ctx.lineTo(probe.x + 3, probe.y - 5);
+        ctx.lineTo(probe.x, probe.y); 
+        ctx.fill();
+
+        if(probe.dragging) {
+            ctx.strokeStyle = "rgba(0,0,0,0.2)";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(probe.x - 10, probe.y - 50, 20, 55);
+        }
+    }
+
+    function updateMeter() {
+        if (!powerOn) {
+            display.innerText = "0.0 V";
+            display.style.color = "#0f0";
+            return;
+        }
+        
+        const getV = (probe) => {
+            // If dragging or not snapped to a node, treat as undefined connection
+            if (probe.dragging || probe.node === -1) return null;
+            return nodeVoltages[probe.node];
+        };
+
+        const vRed = getV(probes.red);
+        const vBlack = getV(probes.black);
+
+        // If either probe is not connected to a valid voltage source (is null/floating)
+        if (vRed === null || vBlack === null) {
+            display.innerText = "Undefined";
+            display.style.color = "#e74c3c"; // Red to indicate invalid state
+        } else {
+            let diff = vRed - vBlack;
+            display.innerText = diff.toFixed(1) + " V";
+            display.style.color = "#0f0";
+        }
+    }
+
+    // --- GEMINI AI INTEGRATION ---
+
+    const apiKey = "AIzaSyAcBZ6Q24jP-rrWB7451aLs8m6EGddlRgA"; // Environment provided key
+
+    // Helper: Generate description of circuit state
+    function getCircuitState() {
+        const state = {
+            powerOn: powerOn,
+            totalBulbs: 12,
+            supplyVoltage: 240,
+            brokenWires: wires.filter(w => w.open).map(w => w.id),
+            blownBulbs: bulbs.filter(b => b.state === 1).map(b => b.id),
+            shortedBulbs: bulbs.filter(b => b.state === 2).map(b => b.id),
+            voltmeterReading: display.innerText,
+            isCircuitComplete: !wires.some(w => w.open) && !bulbs.some(b => b.state === 1)
+        };
+        return JSON.stringify(state, null, 2);
+    }
+
+    async function callGemini(promptText) {
+        const responseDiv = document.getElementById('ai-response');
+        responseDiv.innerHTML = '<span class="loading">Thinking... ?</span>';
+        
+        try {
+            const response = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{ text: promptText }]
+                        }]
+                    })
+                }
+            );
+
+            if (!response.ok) throw new Error('API call failed');
+            
+            const data = await response.json();
+            const text = data.candidates[0].content.parts[0].text;
+            
+            // Simple markdown-ish bold formatting
+            responseDiv.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        } catch (error) {
+            responseDiv.innerHTML = `<span style="color:red">Error: Could not reach AI Tutor. (${error.message})</span>`;
+        }
+    }
+
+    function askGeminiAnalysis() {
+        const state = getCircuitState();
+        const prompt = `
+            You are a helpful Physics Tutor. Analyze this Series Circuit Simulation state:
+            ${state}
+            
+            Explain briefly (2-3 sentences) what is happening in the circuit regarding current flow and voltage drops.
+            If there are faults (broken wires, blown bulbs), explain why the other bulbs are off and what voltage readings would be expected across the break.
+            Keep it educational and encouraging.
+        `;
+        callGemini(prompt);
+    }
+
+    function askGeminiQuiz() {
+        const prompt = `
+            You are a helpful Physics Tutor. 
+            Generate a single multiple-choice conceptual physics question about Series Circuits, Ohm's Law, or Voltage Drops suitable for a high school student.
+            Provide the question and options first, then reveal the answer at the bottom.
+        `;
+        callGemini(prompt);
+    }
+
+    // --- Event Listeners ---
+    let activeProbe = null;
+    
+    // Helper to get mouse pos relative to canvas, accounting for CSS scaling
+    function getMousePos(evt) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        return {
+            x: (evt.clientX - rect.left) * scaleX,
+            y: (evt.clientY - rect.top) * scaleY
+        };
+    }
+
+    window.addEventListener('mousedown', (e) => {
+        // Only if inside canvas logic check
+        const rect = canvas.getBoundingClientRect();
+        if (e.clientX < rect.left || e.clientX > rect.right || 
+            e.clientY < rect.top || e.clientY > rect.bottom) return;
+            
+        const pos = getMousePos(e);
+        const x = pos.x;
+        const y = pos.y;
+
+        // 1. Probes
+        if (Math.hypot(x - probes.red.x, y - probes.red.y) < 30) {
+            activeProbe = 'red'; probes.red.dragging = true; draw(); return;
+        }
+        if (Math.hypot(x - probes.black.x, y - probes.black.y) < 30) {
+            activeProbe = 'black'; probes.black.dragging = true; draw(); return;
+        }
+
+        // 2. Bulbs
+        const bulbIndex = getBulbAt(x, y);
+        if (bulbIndex !== -1) {
+            if (e.button === 0) bulbs[bulbIndex].state = (bulbs[bulbIndex].state === 1) ? 0 : 1; 
+            else if (e.button === 2) bulbs[bulbIndex].state = (bulbs[bulbIndex].state === 2) ? 0 : 2; 
+            draw();
+            return;
+        }
+        
+        // 3. Wires
+        if (e.button === 0) {
+            const wireIndex = getWireAt(x, y);
+            if (wireIndex !== -1) {
+                wires[wireIndex].open = !wires[wireIndex].open;
+                draw();
+            }
+        }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (!activeProbe) return;
+        const pos = getMousePos(e);
+        
+        // Allow dragging slightly outside the visual canvas area by clamping, but using scaled values
+        probes[activeProbe].x = pos.x;
+        probes[activeProbe].y = pos.y;
+        draw();
+    });
+
+    window.addEventListener('mouseup', (e) => {
+        if (activeProbe) {
+            const pos = getMousePos(e);
+            const x = pos.x;
+            const y = pos.y;
+            
+            const node = getClosestNode(x, y);
+            const nodePos = getNodePos(node);
+            
+            if (node !== -1 && Math.hypot(x - nodePos.x, y - nodePos.y) < 30) {
+                probes[activeProbe].node = node;
+                probes[activeProbe].x = nodePos.x;
+                probes[activeProbe].y = nodePos.y;
+            } else {
+                probes[activeProbe].node = -1;
+            }
+            probes[activeProbe].dragging = false;
+            activeProbe = null;
+            draw();
+        }
+    });
+
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+    draw();
+
+</script>
+</body>
+</html>
