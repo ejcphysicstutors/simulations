@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/simulations/', // Add this line here!
+  base: '/simulations/simulations/12-bulbs/', // Add this line here!
   server: {
     port: 3000
   }
