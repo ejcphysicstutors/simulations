@@ -1,560 +1,970 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Electron in B and E field</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        .ejc-credit-banner {
-            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-            color: white;
-            padding: 12px 20px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            position: sticky;
-            top: 0;
-            z-index: 10000;
-        }
-        
-        .ejc-credit-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        
-        .ejc-credit-title {
-            font-size: 16px;
-            font-weight: 600;
-        }
-        
-        .ejc-credit-author {
-            font-size: 14px;
-            opacity: 0.95;
-        }
-        
-        .ejc-credit-author strong {
-            font-weight: 600;
-            color: #fbbf24;
-        }
-    </style>
-    <style>
-        body { margin: 0; overflow: hidden; font-family: sans-serif; background: #0a0a0a; color: white; }
-        canvas { display: block; }
-        .control-panel {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            width: 280px;
-            max-height: calc(100vh - 20px);
-            overflow-y: auto;
-            background: rgba(20, 20, 20, 0.85);
-            padding: 15px;
-            border-radius: 12px;
-            backdrop-filter: blur(8px);
-            border: 1px solid #444;
-            z-index: 100;
-        }
-        .view-controls {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            gap: 10px;
-            z-index: 100;
-        }
-        input[type=range] { width: 100%; cursor: pointer; }
-        .vector-label {
-            position: absolute;
-            pointer-events: none;
-            font-weight: bold;
-            font-size: 14px;
-            text-shadow: 1px 1px 2px black;
-        }
-        @media (max-width: 640px) {
-            .control-panel { width: 220px; font-size: 12px; }
-            .view-controls { flex-direction: column; bottom: 10px; right: 10px; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Electron Motion in Magnetic Field</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#07111f;
+  font-family:'Segoe UI',Arial,sans-serif;
+  color:#c8ddf0;
+  height:100vh;
+  display:flex; flex-direction:column; overflow:hidden;
+}
+#topbar {
+  background:rgba(4,12,28,0.98);
+  border-bottom:1px solid #142040;
+  padding:7px 12px;
+  display:flex; align-items:center; gap:10px; flex-shrink:0; z-index:20; flex-wrap:wrap;
+}
+#topbar h1 { font-size:12px; font-weight:700; color:#6aaaff; letter-spacing:.5px; white-space:nowrap; flex-shrink:0; }
+.tab-row { display:flex; gap:4px; flex:1; justify-content:center; flex-wrap:wrap; }
+.tab {
+  font-size:11px; padding:5px 14px; border-radius:20px;
+  border:1px solid #142040; background:transparent; color:#4a6a90;
+  cursor:pointer; transition:all .2s; white-space:nowrap; font-family:'Segoe UI',Arial,sans-serif;
+}
+.tab:hover { border-color:#2a5090; color:#7090c0; }
+.tab.active { background:rgba(15,55,150,.4); border-color:#3a70d0; color:#88c0ff; font-weight:700; box-shadow:0 0 10px rgba(50,100,255,.2); }
+
+#main { display:flex; flex:1; overflow:hidden; min-height:0; }
+#canvasWrap { flex:1; position:relative; min-height:0; }
+#c { display:block; }
+
+#plate-wrap { flex:1; position:relative; min-height:0; display:none; background:#050e1c; }
+#cPlate { display:block; width:100%; height:100%; }
+
+#panel {
+  width:256px; background:rgba(3,10,24,.99);
+  border-left:1px solid #0f1e38;
+  display:flex; flex-direction:column; overflow-y:auto; flex-shrink:0;
+}
+#panel::-webkit-scrollbar { width:3px; }
+#panel::-webkit-scrollbar-thumb { background:#142040; border-radius:2px; }
+
+.pblock { padding:12px 14px; border-bottom:1px solid #0a1628; }
+.pblock h3 { font-size:9px; letter-spacing:2.5px; text-transform:uppercase; color:#2a5080; margin-bottom:9px; }
+#scenario-title { font-size:13px; font-weight:700; color:#5aaaff; margin-bottom:7px; line-height:1.3; }
+#scenario-desc  { font-size:11px; color:#6888a8; line-height:1.75; }
+
+.slider-row { margin-bottom:12px; }
+.slider-row:last-child { margin-bottom:0; }
+.slider-label { display:flex; justify-content:space-between; font-size:11px; color:#7898b8; margin-bottom:5px; gap:6px; }
+.sval { color:#40c8ff; font-weight:700; flex-shrink:0; }
+input[type=range] {
+  width:100%; height:4px; -webkit-appearance:none;
+  background:linear-gradient(to right,#0a1e3c,#1a5098); border-radius:2px; outline:none; cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
+  background:#48a0ff; box-shadow:0 0 8px rgba(72,160,255,.6); cursor:pointer;
+}
+
+.preset-btn {
+  width:100%; margin-bottom:8px; padding:10px 12px;
+  border-radius:6px; border:1.5px solid #142040;
+  background:rgba(8,22,52,.6); color:#8aaccc; cursor:pointer;
+  font-family:'Segoe UI',Arial,sans-serif; font-size:11px; text-align:left;
+  transition:all .2s; line-height:1.5;
+}
+.preset-btn:last-child { margin-bottom:0; }
+.preset-btn:hover { border-color:#2a5090; background:rgba(15,40,100,.5); color:#b0ccee; }
+.preset-btn.active { border-color:#3a80e0; background:rgba(15,55,150,.4); color:#90c8ff; }
+.preset-btn .pb-title { font-weight:700; font-size:12px; display:block; margin-bottom:2px; }
+.preset-btn .pb-desc  { font-size:10px; color:#5a7898; }
+.preset-btn.active .pb-desc { color:#6898b8; }
+
+.leg-item { display:flex; align-items:center; gap:8px; margin-bottom:7px; font-size:11px; color:#7090b0; }
+.leg-item:last-child { margin-bottom:0; }
+.leg-dot  { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.leg-dash { width:22px; height:3px; border-radius:1px; flex-shrink:0; }
+
+.rout-grid { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+.rout { background:rgba(6,18,42,.7); border:1px solid #0f2040; border-radius:4px; padding:6px 8px; font-size:10px; }
+.rlbl { color:#2a5070; margin-bottom:2px; }
+.rval { color:#40c8ff; font-weight:700; font-size:12px; }
+
+.btn-row { display:flex; gap:6px; flex-wrap:wrap; }
+.btn {
+  font-family:'Segoe UI',Arial,sans-serif; font-size:11px; padding:6px 14px;
+  border-radius:4px; border:1px solid #0f2040; background:rgba(8,22,52,.6); color:#5080a0;
+  cursor:pointer; transition:all .15s;
+}
+.btn:hover { border-color:#2050a0; color:#80a8d0; background:rgba(15,40,100,.5); }
+.btn.primary { border-color:#1a50b0; color:#60a8ff; background:rgba(8,40,110,.4); }
+.btn.primary:hover { background:rgba(15,60,160,.5); }
+
+#overlay {
+  position:absolute; top:10px; left:10px;
+  background:rgba(3,10,26,.88); border:1px solid #0f2040; border-radius:6px;
+  padding:9px 13px; pointer-events:none; min-width:164px;
+}
+.ov-row { display:flex; gap:8px; align-items:center; margin-bottom:4px; font-size:11px; }
+.ov-row:last-child { margin-bottom:0; }
+.ov-lbl { color:#2a5070; width:48px; flex-shrink:0; }
+.ov-val { color:#40c8ff; font-weight:700; }
+
+#cam-hint {
+  position:absolute; bottom:9px; left:50%; transform:translateX(-50%);
+  background:rgba(3,10,26,.7); border:1px solid #0f2040; border-radius:14px;
+  padding:3px 12px; font-size:10px; color:#2a5070; pointer-events:none;
+  letter-spacing:1px; white-space:nowrap;
+}
+.kc { display:inline; background:rgba(20,60,140,.3); border-radius:3px; padding:1px 4px; font-weight:600; }
+</style>
 </head>
 <body>
-    <div class="ejc-credit-banner">
-        <div class="ejc-credit-content">
-            <div class="ejc-credit-title">Electron in B and E field</div>
-            <div class="ejc-credit-author">Created by <strong>Lim Hwee Ke</strong> | EJC Physics</div>
-        </div>
+
+<div id="topbar">
+  <h1>⚛ Electron in Magnetic Field</h1>
+  <div class="tab-row">
+    <button class="tab active" onclick="setScenario(0)">① v∥ and v⊥ to B</button>
+    <button class="tab"        onclick="setScenario(1)">② E ∥ B — Pitch</button>
+    <button class="tab"        onclick="setScenario(2)">③ E ⊥ B — Plates</button>
+  </div>
+</div>
+
+<div id="main">
+  <!-- 3D canvas (scenarios 0–1) -->
+  <div id="canvasWrap">
+    <canvas id="c"></canvas>
+    <div id="overlay">
+      <div class="ov-row"><span class="ov-lbl">Speed</span><span class="ov-val" id="ov-spd">—</span></div>
+      <div class="ov-row"><span class="ov-lbl">v∥</span>   <span class="ov-val" id="ov-vp">—</span></div>
+      <div class="ov-row"><span class="ov-lbl">v⊥</span>   <span class="ov-val" id="ov-vt">—</span></div>
+      <div class="ov-row"><span class="ov-lbl">Turns</span><span class="ov-val" id="ov-tr">—</span></div>
     </div>
-    
-    <div class="ejc-simulation-container">
-        
+    <div id="cam-hint">🖱 Drag to rotate · Scroll to zoom</div>
+  </div>
 
-    <div class="control-panel space-y-4">
-        <h1 class="text-lg font-bold border-b border-gray-600 pb-2">Electron Field Lab</h1>
-        
-        <div>
-            <label class="block text-xs uppercase text-gray-400">Magnetic Field (B) [z-axis]</label>
-            <input type="range" id="bField" min="0" max="10" step="0.1" value="2">
-            <div class="flex justify-between text-xs"><span>0 mT</span><span id="bVal">2.0 mT</span><span>10 mT</span></div>
-        </div>
+  <!-- 2D parallel plate canvas (scenario 2 only) -->
+  <div id="plate-wrap">
+    <canvas id="cPlate"></canvas>
+  </div>
 
-        <div>
-            <label class="block text-xs uppercase text-gray-400">Electric Field (E)</label>
-            <input type="range" id="eField" min="-10" max="10" step="0.1" value="0">
-            <div class="flex justify-between text-xs"><span>-10 V/m</span><span id="eVal">0 V/m</span><span>10 V/m</span></div>
-        </div>
-
-        <div>
-            <label class="block text-xs uppercase text-gray-400">Initial Velocity (v)</label>
-            <input type="range" id="velocity" min="1" max="10" step="0.1" value="5">
-            <div class="flex justify-between text-xs"><span>1e5 m/s</span><span id="vVal">5.0e5</span><span>1e6 m/s</span></div>
-        </div>
-
-        <div>
-            <label class="block text-xs uppercase text-gray-400">Pitch Angle (?)</label>
-            <input type="range" id="angle" min="0" max="90" step="1" value="90">
-            <div class="flex justify-between text-xs"><span>0? (|| B)</span><span id="angleVal">90?</span><span>90? (? B)</span></div>
-        </div>
-
-        <div class="pt-2 border-t border-gray-700 space-y-2">
-            <div class="flex items-center justify-between">
-                <span class="text-xs">E-Field Mode:</span>
-                <select id="eMode" class="bg-gray-800 text-xs p-1 rounded">
-                    <option value="parallel">Parallel to B (z)</option>
-                    <option value="perp">Perp to B (y)</option>
-                </select>
-            </div>
-            
-            <button id="resetBtn" class="w-full bg-blue-600 hover:bg-blue-500 py-2 rounded text-sm font-bold transition">Restart Simulation</button>
-            <button id="clearBtn" class="w-full bg-gray-700 hover:bg-gray-600 py-1 rounded text-xs transition">Clear Path</button>
-        </div>
-
-        <div class="text-[10px] text-gray-400 italic">
-            Vectors: <span class="text-green-400">V (Green)</span>, <span class="text-blue-400">B (Blue)</span>, <span class="text-yellow-400">E (Yellow)</span>, <span class="text-red-400">F (Red)</span>
-        </div>
+  <!-- Side panel -->
+  <div id="panel">
+    <div class="pblock">
+      <div id="scenario-title"></div>
+      <div id="scenario-desc"></div>
     </div>
-
-    <div class="view-controls">
-        <button onclick="setView('front')" class="bg-gray-800 p-2 rounded border border-gray-600 text-xs">XY (Front)</button>
-        <button onclick="setView('top')" class="bg-gray-800 p-2 rounded border border-gray-600 text-xs">XZ (Top)</button>
-        <button onclick="setView('side')" class="bg-gray-800 p-2 rounded border border-gray-600 text-xs">YZ (Side)</button>
-        <button onclick="setView('iso')" class="bg-gray-800 p-2 rounded border border-gray-600 text-xs">Reset Cam</button>
+    <div class="pblock">
+      <h3>Controls</h3>
+      <div id="ctrl-inner"></div>
     </div>
-
-    <script>
-        // --- Constants & State ---
-        const Q = -1.602e-19; // Electron charge
-        const M = 9.109e-31; // Electron mass
-        const SCALE_V = 1e-5; // Visual scaling factor for velocity
-        const DT = 0.01;      // Simulation time step
-
-        let scene, camera, renderer, electron, trail;
-        let bField = 2.0, eField = 0.0, vInit = 5.0, vAngle = 90;
-        let eMode = 'parallel';
-        let pos = new THREE.Vector3(0, 0, 0);
-        let vel = new THREE.Vector3(0, 0, 0);
-        let points = [];
-        let trailGeometry;
-        
-        // Vectors
-        let arrowV, arrowB, arrowE, arrowF;
-
-        function init() {
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
-
-            // Lighting
-            const ambient = new THREE.AmbientLight(0xffffff, 0.5);
-            scene.add(ambient);
-            const directional = new THREE.DirectionalLight(0xffffff, 0.8);
-            directional.position.set(5, 5, 5);
-            scene.add(directional);
-
-            // Grid Helpers
-            const gridXZ = new THREE.GridHelper(20, 20, 0x444444, 0x222222);
-            scene.add(gridXZ);
-            
-            // Axes Helper
-            const axes = new THREE.AxesHelper(5);
-            scene.add(axes);
-
-            // Electron
-            const geo = new THREE.SphereGeometry(0.15, 16, 16);
-            const mat = new THREE.MeshPhongMaterial({ color: 0x00ffff, emissive: 0x008888 });
-            electron = new THREE.Mesh(geo, mat);
-            scene.add(electron);
-
-            // Trail
-            trailGeometry = new THREE.BufferGeometry();
-            const trailMat = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.6 });
-            trail = new THREE.Line(trailGeometry, trailMat);
-            scene.add(trail);
-
-            // Vector Arrows
-            arrowV = createArrow(0x00ff00); // Velocity
-            arrowB = createArrow(0x0088ff); // B Field
-            arrowE = createArrow(0xffff00); // E Field
-            arrowF = createArrow(0xff0000); // Force
-
-            setView('iso');
-            resetSimulation();
-            animate();
-        }
-
-        function createArrow(color) {
-            const dir = new THREE.Vector3(1, 0, 0);
-            const arrow = new THREE.ArrowHelper(dir, new THREE.Vector3(0,0,0), 1, color, 0.2, 0.1);
-            scene.add(arrow);
-            return arrow;
-        }
-
-        function resetSimulation() {
-            pos.set(-5, 0, 0);
-            
-            // Convert angle to velocity vector
-            // Angle is relative to B field which is along Z axis in this sim logic
-            const rad = (90 - vAngle) * Math.PI / 180;
-            const vMag = vInit; 
-            vel.set(
-                vMag * Math.sin(rad), // x component
-                0,                    // y component
-                vMag * Math.cos(rad)  // z component (parallel to B)
-            );
-
-            points = [pos.clone()];
-            updateTrail();
-        }
-
-        function updateTrail() {
-            const positions = new Float32Array(points.length * 3);
-            for (let i = 0; i < points.length; i++) {
-                positions[i * 3] = points[i].x;
-                positions[i * 3 + 1] = points[i].y;
-                positions[i * 3 + 2] = points[i].z;
-            }
-            trailGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        }
-
-        function setView(type) {
-            const dist = 15;
-            switch(type) {
-                case 'front': camera.position.set(0, 0, dist); camera.lookAt(0,0,0); break;
-                case 'top': camera.position.set(0, dist, 0); camera.lookAt(0,0,0); break;
-                case 'side': camera.position.set(dist, 0, 0); camera.lookAt(0,0,0); break;
-                case 'iso': camera.position.set(10, 10, 10); camera.lookAt(0,0,0); break;
-            }
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-
-            // 1. Physics Calculation (F = qE + q(v x B))
-            // Vector orientation: B is along Z axis.
-            const B = new THREE.Vector3(0, 0, bField * 0.1); 
-            const E = new THREE.Vector3(0, 0, 0);
-            if (eMode === 'parallel') {
-                E.z = eField * 0.1;
-            } else {
-                E.y = eField * 0.1;
-            }
-
-            // Magnetic Force = v x B
-            const vCrossB = new THREE.Vector3().crossVectors(vel, B);
-            
-            // Lorentz Force (Note: q is negative for electron)
-            const force = new THREE.Vector3().addVectors(E, vCrossB).multiplyScalar(-1);
-
-            // Acceleration a = F/m (Simplified scaling for visualization)
-            const accel = force.clone().multiplyScalar(0.5); 
-            
-            vel.add(accel.multiplyScalar(DT));
-            pos.add(vel.clone().multiplyScalar(DT));
-
-            electron.position.copy(pos);
-
-            // Update vectors at electron position
-            arrowV.position.copy(pos);
-            arrowV.setDirection(vel.clone().normalize());
-            arrowV.setLength(vel.length() * 0.5 + 0.1);
-
-            arrowB.position.copy(pos);
-            arrowB.setDirection(new THREE.Vector3(0,0,1));
-            arrowB.setLength(Math.abs(bField) * 0.3 + 0.1);
-
-            arrowE.position.copy(pos);
-            const eDir = E.clone().normalize();
-            arrowE.setDirection(eDir.length() > 0 ? eDir : new THREE.Vector3(1,0,0));
-            arrowE.setLength(Math.abs(eField) * 0.3 + (Math.abs(eField) > 0 ? 0.1 : 0));
-            arrowE.visible = Math.abs(eField) > 0;
-
-            arrowF.position.copy(pos);
-            const fDir = force.clone().normalize();
-            arrowF.setDirection(fDir.length() > 0 ? fDir : new THREE.Vector3(1,0,0));
-            arrowF.setLength(force.length() * 2 + (force.length() > 0 ? 0.1 : 0));
-
-            // 2. Trail Management
-            if (points.length < 1000) {
-                points.push(pos.clone());
-                updateTrail();
-            }
-
-            // 3. Bounds check to reset
-            if (pos.length() > 30) resetSimulation();
-
-            renderer.render(scene, camera);
-        }
-
-        // --- UI Listeners ---
-        document.getElementById('bField').addEventListener('input', (e) => {
-            bField = parseFloat(e.target.value);
-            document.getElementById('bVal').innerText = bField.toFixed(1) + " mT";
-        });
-        document.getElementById('eField').addEventListener('input', (e) => {
-            eField = parseFloat(e.target.value);
-            document.getElementById('eVal').innerText = eField.toFixed(1) + " V/m";
-        });
-        document.getElementById('velocity').addEventListener('input', (e) => {
-            vInit = parseFloat(e.target.value);
-            document.getElementById('vVal').innerText = vInit.toFixed(1) + "e5";
-        });
-        document.getElementById('angle').addEventListener('input', (e) => {
-            vAngle = parseInt(e.target.value);
-            document.getElementById('angleVal').innerText = vAngle + "?";
-        });
-        document.getElementById('eMode').addEventListener('change', (e) => {
-            eMode = e.target.value;
-        });
-        document.getElementById('resetBtn').addEventListener('click', resetSimulation);
-        document.getElementById('clearBtn').addEventListener('click', () => {
-            points = [pos.clone()];
-            updateTrail();
-        });
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        // Initialize
-        window.onload = init;
-    </script>
-
+    <div class="pblock">
+      <h3>Legend</h3>
+      <div id="leg-inner"></div>
     </div>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.tailwindcss.com"></script>
+    <div class="pblock" id="sim-btns">
+      <h3>Simulation</h3>
+      <div class="btn-row">
+        <button class="btn primary" id="ppBtn" onclick="togglePP()">⏸ Pause</button>
+        <button class="btn" onclick="doReset()">↺ Reset</button>
+      </div>
+    </div>
+    <div class="pblock">
+      <h3>Live Values</h3>
+      <div class="rout-grid">
+        <div class="rout"><div class="rlbl">Speed</div>       <div class="rval" id="rv-spd">—</div></div>
+        <div class="rout"><div class="rlbl">v∥ (along B)</div><div class="rval" id="rv-vp">—</div></div>
+        <div class="rout"><div class="rlbl">v⊥ (⊥ to B)</div><div class="rval" id="rv-vt">—</div></div>
+        <div class="rout"><div class="rlbl">|F_net|</div>     <div class="rval" id="rv-fn">—</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-        // --- Constants & State ---
-        const Q = -1.602e-19; // Electron charge
-        const M = 9.109e-31; // Electron mass
-        const SCALE_V = 1e-5; // Visual scaling factor for velocity
-        const DT = 0.01;      // Simulation time step
+// ═══════════════════════════════════════════════════════════════════
+//  CONSTANTS
+// ═══════════════════════════════════════════════════════════════════
+const QE = -1.6e-19, ME = 9.11e-31;
+const B0 = 0.5e-3;   // T
+const V0 = 3.0e6;    // m/s
+const SCALE = 7.7;   // m → scene units
+const DT = 8e-12;
+const SPF = 120;
+const E_BAL = V0 * B0;   // 1500 V/m — balance condition v = E/B
 
-        let scene, camera, renderer, electron, trail;
-        let bField = 2.0, eField = 0.0, vInit = 5.0, vAngle = 90;
-        let eMode = 'parallel';
-        let pos = new THREE.Vector3(0, 0, 0);
-        let vel = new THREE.Vector3(0, 0, 0);
-        let points = [];
-        let trailGeometry;
-        
-        // Vectors
-        let arrowV, arrowB, arrowE, arrowF;
+// ═══════════════════════════════════════════════════════════════════
+//  SCENARIO DEFINITIONS
+//  Scenario 0: v∥ v⊥ decomposition (3D)
+//  Scenario 1: E ∥ B pitch change   (3D)
+//  Scenario 2: E ⊥ B plates         (2D)
+// ═══════════════════════════════════════════════════════════════════
+const SCENDEF = [
 
-        function init() {
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
+  // ── ① v∥ and v⊥ ──────────────────────────────────────────────
+  {
+    title: '① Why v∥ and v⊥ Behave Differently',
+    desc: `<b style="color:#40d0ff">v∥</b> is parallel to B → <b>F = qv∥×B = 0</b> → no force, pure drift along Z.<br><br>
+<b style="color:#ff4488">v⊥</b> is perpendicular to B → <b>F = qv⊥×B ≠ 0</b> → centripetal force → circular orbit.<br><br>
+Adjust θ, let the full helix build, then <b>pause and drag</b> to inspect the path from any angle.`,
+    getBVec: () => new THREE.Vector3(0, 0, B0),
+    getEVec: () => new THREE.Vector3(0, 0, 0),
+    getTheta: st => st.theta,
+    arrows: ['v','vpar','vperp','F','B'],
+    trailCol: 0x20e8a0,
+    controls: [
+      { id:'t0', label:'Launch angle θ to B', min:10, max:80, step:5, defVal:40, unit:'°',
+        apply:(st,v)=>{st.theta=v;} }
+    ],
+    legend: [
+      { dot:'#ffffff',  txt:'v — total velocity' },
+      { dot:'#40d0ff',  txt:'v∥ — along B, no magnetic force' },
+      { dot:'#ff4488',  txt:'v⊥ — ⊥ to B, drives circular orbit' },
+      { dot:'#ff8030',  txt:'B — magnetic field along +Z' },
+      { dot:'#ff30c0',  txt:'F — magnetic force (always ⊥ to v)' },
+      { dash:'#20e8a0', txt:'Full helical path (start→end) + midpoint arrow' },
+    ]
+  },
 
-            // Lighting
-            const ambient = new THREE.AmbientLight(0xffffff, 0.5);
-            scene.add(ambient);
-            const directional = new THREE.DirectionalLight(0xffffff, 0.8);
-            directional.position.set(5, 5, 5);
-            scene.add(directional);
+  // ── ② E ∥ B — Changing Pitch ─────────────────────────────────
+  {
+    title: '② E ∥ B — Changing Helix Pitch',
+    desc: `E is added <b style="color:#ffd020">along Z</b> (parallel to B).<br><br>
+E accelerates or decelerates <b style="color:#40d0ff">v∥</b> each revolution → <span class="kc" style="color:#ffcc20">pitch grows or shrinks</span> each loop.<br><br>
+v⊥ is unchanged by E → <b>radius stays constant</b>. Pause and orbit to compare loop spacing.`,
+    getBVec: () => new THREE.Vector3(0, 0, B0),
+    getEVec: st => new THREE.Vector3(0, 0, st.eStr),
+    getTheta: st => st.theta,
+    arrows: ['vpar','F','B','E'],
+    trailCol: 0xffcc20,
+    controls: [
+      { id:'t1', label:'Launch angle θ to B', min:10, max:80, step:5, defVal:40, unit:'°',
+        apply:(st,v)=>{st.theta=v;} },
+      { id:'e1', label:'E field along Z (V/m)', min:-300, max:300, step:20, defVal:0, unit:' V/m',
+        apply:(st,v)=>{st.eStr=v;} }
+    ],
+    legend: [
+      { dot:'#40d0ff',  txt:'v∥ — accelerated/decelerated by E along Z' },
+      { dot:'#ff8030',  txt:'B — magnetic field along +Z' },
+      { dot:'#ffd020',  txt:'E — electric field along +Z (parallel to B)' },
+      { dot:'#ff30c0',  txt:'F — net force on electron' },
+      { dash:'#ffcc20', txt:'Full helical path (start→end) + midpoint arrow' },
+    ]
+  },
 
-            // Grid Helpers
-            const gridXZ = new THREE.GridHelper(20, 20, 0x444444, 0x222222);
-            scene.add(gridXZ);
-            
-            // Axes Helper
-            const axes = new THREE.AxesHelper(5);
-            scene.add(axes);
+  // ── ③ E ⊥ B — Parallel Plates (2D) ──────────────────────────
+  {
+    title: '③ E ⊥ B — Parallel Plate Velocity Selector',
+    desc: `E = 1500 V/m (fixed), B = 0.5 mT (fixed).<br>
+Only the electron's <b>speed</b> changes between cases.<br><br>
+Balance condition: <b style="color:#20ff80">v = E/B = 3.0 Mm/s</b><br><br>
+• Too fast → <span style="color:#ff5050">Bqv dominates</span> → curves toward − plate<br>
+• Just right → <span style="color:#20ff80">straight line</span> through<br>
+• Too slow → <span style="color:#ffd020">qE dominates</span> → curves toward + plate`,
+    is2D: true,
+    presets: [
+      { id:0, label:'v = 6.0 Mm/s  (too fast)',   colLabel:'#ff5050',
+        desc:'Bqv > qE — magnetic force dominates, curves toward − plate',
+        vFrac: 2.0 },
+      { id:1, label:'v = 3.0 Mm/s  (balanced)',   colLabel:'#20ff80',
+        desc:'qE = Bqv — forces balance, electron goes straight',
+        vFrac: 1.0 },
+      { id:2, label:'v = 1.2 Mm/s  (too slow)',   colLabel:'#ffd020',
+        desc:'qE > Bqv — electric force dominates, curves toward + plate',
+        vFrac: 0.4 },
+    ],
+    activePreset: 1,
+  },
+];
 
-            // Electron
-            const geo = new THREE.SphereGeometry(0.15, 16, 16);
-            const mat = new THREE.MeshPhongMaterial({ color: 0x00ffff, emissive: 0x008888 });
-            electron = new THREE.Mesh(geo, mat);
-            scene.add(electron);
+const ST = [
+  { theta:40, eStr:0 },
+  { theta:40, eStr:0 },
+  { activePreset:1 },
+];
 
-            // Trail
-            trailGeometry = new THREE.BufferGeometry();
-            const trailMat = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.6 });
-            trail = new THREE.Line(trailGeometry, trailMat);
-            scene.add(trail);
+let cur = 0, running = true;
+let pos = new THREE.Vector3(), vel = new THREE.Vector3();
 
-            // Vector Arrows
-            arrowV = createArrow(0x00ff00); // Velocity
-            arrowB = createArrow(0x0088ff); // B Field
-            arrowE = createArrow(0xffff00); // E Field
-            arrowF = createArrow(0xff0000); // Force
+// Trail: accumulate full 4-revolution path then stop (never shift/discard)
+// ~9000 steps/rev × 4 revs = 36000 points max
+const TRAIL_MAX = 40000;
+let trail = [];
+let turns = 0, prevVx = 0;
+const TARGET_TURNS = 4;   // stop accumulating after this many full revolutions
+let trailComplete = false; // true once 4 revolutions are done
 
-            setView('iso');
-            resetSimulation();
-            animate();
+// ═══════════════════════════════════════════════════════════════════
+//  THREE.JS SETUP
+// ═══════════════════════════════════════════════════════════════════
+const c3 = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas:c3, antialias:true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setClearColor(0x07111f,1);
+const scene3 = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50,1,.001,200);
+
+function resize3(){
+  const w=c3.parentElement.clientWidth, h=c3.parentElement.clientHeight;
+  renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize3); resize3();
+
+scene3.add(new THREE.AmbientLight(0x304060,4));
+const dl = new THREE.DirectionalLight(0x8090ff,1.2); dl.position.set(3,5,3); scene3.add(dl);
+
+// ── Camera orbit ──────────────────────────────────────────────────
+let camR=3.8, camTh=0.65, camPh=0.38;
+const camTgt = new THREE.Vector3(0,0,0.8);
+function applyCam(){
+  camera.position.set(
+    camTgt.x + camR*Math.cos(camPh)*Math.sin(camTh),
+    camTgt.y + camR*Math.sin(camPh),
+    camTgt.z + camR*Math.cos(camPh)*Math.cos(camTh));
+  camera.lookAt(camTgt);
+}
+applyCam();
+let drag=false, lm={x:0,y:0};
+c3.addEventListener('mousedown', e=>{drag=true; lm={x:e.clientX,y:e.clientY};});
+window.addEventListener('mouseup', ()=>drag=false);
+window.addEventListener('mousemove', e=>{
+  if(!drag) return;
+  camTh -= (e.clientX-lm.x)*.01;
+  camPh = Math.max(-1.3,Math.min(1.3, camPh+(e.clientY-lm.y)*.01));
+  lm={x:e.clientX,y:e.clientY}; applyCam();
+});
+c3.addEventListener('wheel', e=>{
+  camR=Math.max(1.5,Math.min(16, camR+e.deltaY*.005));
+  applyCam(); e.preventDefault();
+},{passive:false});
+let lt2=null;
+c3.addEventListener('touchstart', e=>{lt2=e.touches[0];});
+c3.addEventListener('touchmove', e=>{
+  if(!lt2) return;
+  camTh-=(e.touches[0].clientX-lt2.clientX)*.012;
+  camPh=Math.max(-1.3,Math.min(1.3,camPh+(e.touches[0].clientY-lt2.clientY)*.012));
+  lt2=e.touches[0]; applyCam(); e.preventDefault();
+},{passive:false});
+
+// ── Static scene ──────────────────────────────────────────────────
+scene3.add(new THREE.GridHelper(5,25,0x0e2040,0x081830));
+function mkLine(p1,p2,col,op=.4){
+  return new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(...p1),new THREE.Vector3(...p2)]),
+    new THREE.LineBasicMaterial({color:col,transparent:true,opacity:op}));
+}
+scene3.add(mkLine([-2,0,0],[2,0,0],0x2a4878));
+scene3.add(mkLine([0,-.15,0],[0,.15,0],0x2a4878));
+scene3.add(mkLine([0,0,-.3],[0,0,3.5],0x4a6898,.55));  // Z axis longer
+function mkSprite(txt,p,col,sx=.32,sy=.15){
+  const cv=document.createElement('canvas'); cv.width=128; cv.height=56;
+  const cx=cv.getContext('2d'); cx.fillStyle=col; cx.font='bold 32px Arial';
+  cx.textAlign='center'; cx.textBaseline='middle'; cx.fillText(txt,64,28);
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv),transparent:true}));
+  sp.position.set(...p); sp.scale.set(sx,sy,1); return sp;
+}
+scene3.add(mkSprite('X',[2.2,0,0],'#4a6898'));
+scene3.add(mkSprite('Y',[0,.35,0],'#4a6898'));
+scene3.add(mkSprite('Z',[.15,0,3.7],'#ff8030',.22,.13));
+scene3.add(mkSprite('(B)',[.38,0,3.5],'#ff8030',.28,.13));
+
+// Electron sphere
+const eSphere = new THREE.Mesh(
+  new THREE.SphereGeometry(.045,20,20),
+  new THREE.MeshPhongMaterial({color:0x3a90ff,emissive:0x1040cc,emissiveIntensity:1.2,shininess:100}));
+scene3.add(eSphere);
+eSphere.add(new THREE.Mesh(new THREE.SphereGeometry(.085,12,12),
+  new THREE.MeshBasicMaterial({color:0x1a50ff,transparent:true,opacity:.18,side:THREE.BackSide})));
+const ePL = new THREE.PointLight(0x2060ff,1.5,.9); scene3.add(ePL);
+
+// ═══════════════════════════════════════════════════════════════════
+//  TRAIL SYSTEM — full persistent path + single midpoint arrow
+// ═══════════════════════════════════════════════════════════════════
+const trailBuf = new Float32Array(TRAIL_MAX*3);
+const trailGeo = new THREE.BufferGeometry();
+trailGeo.setAttribute('position', new THREE.BufferAttribute(trailBuf,3));
+const trailMat = new THREE.LineBasicMaterial({color:0x20e8a0,transparent:true,opacity:.9});
+const trailLine3 = new THREE.Line(trailGeo,trailMat);
+scene3.add(trailLine3);
+
+// Single midpoint direction cone
+const midCone = new THREE.Mesh(
+  new THREE.ConeGeometry(.04, .14, 10),
+  new THREE.MeshBasicMaterial({color:0x20e8a0, transparent:true, opacity:.95})
+);
+midCone.visible = false;
+scene3.add(midCone);
+
+function setTrailColor(hex){
+  trailMat.color.setHex(hex);
+  midCone.material.color.setHex(hex);
+}
+
+function flushTrail3(){
+  const n = Math.min(trail.length, TRAIL_MAX);
+  if(n < 2){ trailGeo.setDrawRange(0,0); trailGeo.attributes.position.needsUpdate=true; midCone.visible=false; return; }
+  const off = trail.length - n;
+  for(let i=0;i<n;i++){
+    trailBuf[i*3]  =trail[off+i].x;
+    trailBuf[i*3+1]=trail[off+i].y;
+    trailBuf[i*3+2]=trail[off+i].z;
+  }
+  trailGeo.setDrawRange(0,n);
+  trailGeo.attributes.position.needsUpdate = true;
+
+  // Place a single direction cone at the midpoint of the stored trail
+  if(n >= 6){
+    const mi = Math.floor(n/2);
+    const p0 = trail[off+mi-2];
+    const p1 = trail[off+mi+2];
+    const dir = new THREE.Vector3(p1.x-p0.x, p1.y-p0.y, p1.z-p0.z);
+    if(dir.length() > 1e-9){
+      dir.normalize();
+      midCone.visible = true;
+      midCone.position.copy(trail[off+mi]);
+      // Cone default axis is +Y; rotate to trail direction
+      midCone.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  ARROW SYSTEM (velocity / force vectors on electron)
+// ═══════════════════════════════════════════════════════════════════
+let aObjs = {};
+const ACOLS = { v:0xffffff, vpar:0x40d0ff, vperp:0xff4488, F:0xff30c0,
+                B:0xff8030, E:0xffd020 };
+const ALBLS = { v:'v', vpar:'v∥', vperp:'v⊥', F:'F', B:'B', E:'E' };
+
+function clearArrows(){ Object.values(aObjs).forEach(({a,l})=>{scene3.remove(a);scene3.remove(l);}); aObjs={}; }
+function addArrow(key){
+  const col=ACOLS[key];
+  const a=new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(0,0,0),.3,col,.09,.028);
+  scene3.add(a);
+  const cv=document.createElement('canvas'); cv.width=128; cv.height=56;
+  const cx=cv.getContext('2d'); cx.fillStyle='#'+col.toString(16).padStart(6,'0');
+  cx.font='bold 30px Arial'; cx.textAlign='center'; cx.textBaseline='middle'; cx.fillText(ALBLS[key],64,28);
+  const l=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv),transparent:true}));
+  l.scale.set(.32,.15,1); scene3.add(l);
+  aObjs[key]={a,l};
+}
+function buildArrows(keys){ clearArrows(); keys.forEach(k=>addArrow(k)); }
+
+function placeArrow(key,dir,len){
+  const o=aObjs[key]; if(!o) return;
+  const sp=pos.clone().multiplyScalar(SCALE);
+  if(dir.length()<1e-14||len<.004){o.a.visible=false;o.l.visible=false;return;}
+  o.a.visible=true; o.l.visible=true;
+  o.a.position.copy(sp); o.a.setDirection(dir.clone().normalize()); o.a.setLength(len,len*.28,len*.08);
+  o.l.position.copy(sp).addScaledVector(dir.clone().normalize(),len+.14);
+}
+function placeArrowFixed(key,orig,dir,len){
+  const o=aObjs[key]; if(!o||dir.length()<1e-14) return;
+  o.a.visible=true; o.l.visible=true;
+  o.a.position.copy(orig); o.a.setDirection(dir.clone().normalize()); o.a.setLength(len,len*.28,len*.08);
+  o.l.position.copy(orig).addScaledVector(dir.clone().normalize(),len+.14);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  2D PARALLEL PLATE CANVAS
+// ═══════════════════════════════════════════════════════════════════
+const cPlate = document.getElementById('cPlate');
+const ctxP   = cPlate.getContext('2d');
+
+// Physics setup:
+// Plates horizontal. Electron enters from left at y=0 (centre gap).
+// E field points UPWARD (+Y) — from bottom (+) plate to top (−) plate.
+//   F_E on electron = QE * E_vec = QE*(0,+E,0) → since QE<0, F_E is in −Y (downward).
+//   Label: "qE acts downward on electron"  ← wait, let's check expected A-level convention:
+//
+// Standard A-level setup: top plate positive, bottom plate negative → E points downward (−Y).
+//   F_E on electron = QE*(0,−E,0) → since QE<0, F_E is in +Y (UPWARD). ✓
+//   Electron moving right (+X), B into page (−Z):
+//   F_B = QE*(vx,0,0)×(0,0,−B0) = QE*(0·(−B0)−0·0, 0·0−vx·(−B0), vx·0−0·0)
+//        = QE*(0, vx*B0, 0) → since QE<0, F_B is in −Y (DOWNWARD). ✓
+//   Balance: |F_E|=|F_B| → |QE|*E = |QE|*vx*B0 → E=V0*B0 ✓
+//
+// So: top plate = (+), bottom plate = (−), E points downward (−Y)
+// Force on electron: qE = upward, Bqv = downward
+
+let p2 = {x:0, y:0, vx:0, vy:0, E_val:0, preset:1};
+// Store complete path points for persistent drawing
+let p2fullTrail = [];
+let p2running = true;
+
+function initPlate(presetIdx){
+  const vFrac = SCENDEF[2].presets[presetIdx].vFrac;
+  const v_entry = V0 * vFrac;
+  p2 = { x:0, y:0, vx:v_entry, vy:0, E_val: E_BAL, preset:presetIdx };
+  p2fullTrail = [];
+  p2running = true;
+}
+// Physical dimensions
+const PLATE_W = 0.055;   // 5.5 cm plate length
+const PLATE_H = 0.022;   // ±1.1 cm half-gap
+
+function stepPlate(steps=25){
+  if(!p2running) return;
+  const dt2 = 2e-12;
+  for(let i=0;i<steps;i++){
+    // F_E: E points −Y (downward), F_E = QE*(0,−E_val,0) = (0,−QE*E_val,0) → +Y on electron ✓
+    // F_B: B=(0,0,−B0), v=(vx,vy,0)
+    //   v×B = (vy*(−B0)−0, 0−vx*(−B0), 0) = (−vy*B0, vx*B0, 0)
+    //   F_B = QE*(−vy*B0, vx*B0, 0) → Fy_B = QE*vx*B0 (downward when vx>0) ✓
+    const Fx = QE * (-p2.vy * B0);
+    const Fy = (-QE * p2.E_val) + (QE * p2.vx * B0);
+    //         ^ F_E upward     ^ F_B downward
+    p2.vx += Fx/ME*dt2;
+    p2.vy += Fy/ME*dt2;
+    p2.x  += p2.vx*dt2;
+    p2.y  += p2.vy*dt2;
+    p2fullTrail.push({x:p2.x, y:p2.y});
+    // Stop if electron exits
+    if(p2.x > PLATE_W || Math.abs(p2.y) > PLATE_H){
+      p2running = false;
+      break;
+    }
+  }
+}
+
+function drawPlate(){
+  const W=cPlate.width, H=cPlate.height;
+  ctxP.clearRect(0,0,W,H);
+  ctxP.fillStyle='#050e1c'; ctxP.fillRect(0,0,W,H);
+
+  const marginL=80, marginR=40, marginT=72, marginB=50;
+  const plotW=W-marginL-marginR, plotH=H-marginT-marginB;
+
+  const scX = plotW / PLATE_W;
+  const scY = plotH / (2*PLATE_H);
+  const ox  = marginL;
+  const oy  = marginT + plotH/2;  // screen Y for physical y=0
+
+  function toSX(x){ return ox + x*scX; }
+  function toSY(y){ return oy - y*scY; }   // screen y inverted
+
+  const preset = SCENDEF[2].presets[p2.preset];
+
+  // ── TOP PLATE  (+)  ──────────────────────────────────────────
+  const plateThk = 14;
+  ctxP.fillStyle='#1f3a18';
+  ctxP.fillRect(toSX(0), toSY(PLATE_H)-plateThk, plotW, plateThk);
+  // Positive charge markers on top plate
+  ctxP.strokeStyle='#3a8040'; ctxP.lineWidth=1.5;
+  for(let xi=0;xi<8;xi++){
+    const px=toSX(PLATE_W*(xi+.5)/8), py=toSY(PLATE_H)-plateThk/2;
+    ctxP.beginPath(); ctxP.moveTo(px-5,py); ctxP.lineTo(px+5,py); ctxP.stroke();
+    ctxP.beginPath(); ctxP.moveTo(px,py-5); ctxP.lineTo(px,py+5); ctxP.stroke();
+  }
+  ctxP.fillStyle='#50b060'; ctxP.font='bold 13px Arial'; ctxP.textAlign='left';
+  ctxP.fillText('+ (positive plate)', toSX(0)+6, toSY(PLATE_H)-plateThk-6);
+
+  // ── BOTTOM PLATE  (−)  ───────────────────────────────────────
+  ctxP.fillStyle='#2a1830';
+  ctxP.fillRect(toSX(0), toSY(-PLATE_H), plotW, plateThk);
+  ctxP.strokeStyle='#883060'; ctxP.lineWidth=1.5;
+  for(let xi=0;xi<8;xi++){
+    const px=toSX(PLATE_W*(xi+.5)/8), py=toSY(-PLATE_H)+plateThk/2;
+    ctxP.beginPath(); ctxP.moveTo(px-5,py); ctxP.lineTo(px+5,py); ctxP.stroke();
+  }
+  ctxP.fillStyle='#cc6090'; ctxP.font='bold 13px Arial'; ctxP.textAlign='left';
+  ctxP.fillText('− (negative plate)', toSX(0)+6, toSY(-PLATE_H)+plateThk+16);
+
+  // ── E FIELD ARROWS (downward from + to −, i.e. from top to bottom on screen) ──
+  const eArrowY1 = toSY(PLATE_H)+2;   // just below top plate (screen)
+  const eArrowY2 = toSY(-PLATE_H)-2;  // just above bottom plate (screen)
+  ctxP.strokeStyle='rgba(255,210,30,0.45)'; ctxP.fillStyle='rgba(255,210,30,0.45)';
+  ctxP.lineWidth=1.5; ctxP.setLineDash([4,3]);
+  for(let xi=0;xi<6;xi++){
+    const ex=toSX(PLATE_W*(xi+.5)/6);
+    ctxP.beginPath(); ctxP.moveTo(ex,eArrowY1); ctxP.lineTo(ex,eArrowY2-8); ctxP.stroke();
+    ctxP.setLineDash([]);
+    ctxP.beginPath();  // arrowhead pointing DOWN
+    ctxP.moveTo(ex, eArrowY2);
+    ctxP.lineTo(ex-5, eArrowY2-10);
+    ctxP.lineTo(ex+5, eArrowY2-10);
+    ctxP.closePath(); ctxP.fill();
+    ctxP.setLineDash([4,3]);
+  }
+  ctxP.setLineDash([]);
+  ctxP.fillStyle='rgba(255,210,30,0.85)'; ctxP.font='bold 12px Arial'; ctxP.textAlign='right';
+  ctxP.fillText('E', toSX(0)-8, oy-plotH*0.25);
+
+  // ── B FIELD (into page) ───────────────────────────────────────
+  ctxP.fillStyle='rgba(255,130,50,0.55)';
+  ctxP.font='16px Arial'; ctxP.textAlign='center';
+  const bRows=[-.3,.3], bCols=[.15,.35,.55,.75,.9];
+  for(const fy of bRows){
+    for(const fx of bCols){
+      const bx=toSX(PLATE_W*fx), by=oy+fy*plotH*0.7;
+      // × symbol for into-page
+      ctxP.fillStyle='rgba(255,130,50,0.55)';
+      ctxP.beginPath(); ctxP.arc(bx,by,9,0,Math.PI*2);
+      ctxP.fillStyle='rgba(255,130,50,0.12)'; ctxP.fill();
+      ctxP.strokeStyle='rgba(255,130,50,0.45)'; ctxP.lineWidth=1.2; ctxP.stroke();
+      ctxP.strokeStyle='rgba(255,130,50,0.6)'; ctxP.lineWidth=1.5;
+      const d=5.5;
+      ctxP.beginPath(); ctxP.moveTo(bx-d,by-d); ctxP.lineTo(bx+d,by+d); ctxP.stroke();
+      ctxP.beginPath(); ctxP.moveTo(bx+d,by-d); ctxP.lineTo(bx-d,by+d); ctxP.stroke();
+    }
+  }
+  ctxP.fillStyle='rgba(255,130,50,0.75)'; ctxP.font='bold 11px Arial'; ctxP.textAlign='right';
+  ctxP.fillText('B (into page)', toSX(0)-8, oy+plotH*0.3);
+
+  // ── ENTRY ─────────────────────────────────────────────────────
+  const entryY = toSY(0);
+  ctxP.strokeStyle='rgba(100,160,255,0.7)'; ctxP.fillStyle='rgba(100,160,255,0.7)';
+  ctxP.lineWidth=2; ctxP.setLineDash([]);
+  ctxP.beginPath(); ctxP.moveTo(toSX(0)-50, entryY); ctxP.lineTo(toSX(0)-4, entryY); ctxP.stroke();
+  ctxP.beginPath();
+  ctxP.moveTo(toSX(0)+2, entryY);
+  ctxP.lineTo(toSX(0)-12, entryY-6); ctxP.lineTo(toSX(0)-12, entryY+6);
+  ctxP.closePath(); ctxP.fill();
+  ctxP.font='11px Arial'; ctxP.textAlign='right';
+  ctxP.fillText('electron', toSX(0)-54, entryY-8);
+  ctxP.fillText('→  v', toSX(0)-54, entryY+4);
+
+  // ── PERSISTENT FULL TRAIL ────────────────────────────────────
+  const presetCols = [0xff5050, 0x20ff80, 0xffd020];
+  const hex = presetCols[p2.preset];
+  const tr=(hex>>16)&0xff, tg=(hex>>8)&0xff, tb=hex&0xff;
+
+  if(p2fullTrail.length > 1){
+    ctxP.strokeStyle=`rgba(${tr},${tg},${tb},0.9)`;
+    ctxP.lineWidth=2.5; ctxP.setLineDash([]);
+    ctxP.beginPath();
+    let started=false;
+    for(const pt of p2fullTrail){
+      if(Math.abs(pt.y)>PLATE_H || pt.x<0 || pt.x>PLATE_W){ started=false; continue; }
+      const sx=toSX(pt.x), sy=toSY(pt.y);
+      if(!started){ ctxP.moveTo(sx,sy); started=true; }
+      else ctxP.lineTo(sx,sy);
+    }
+    ctxP.stroke();
+
+    // Single midpoint direction arrow on trail
+    if(p2fullTrail.length >= 8){
+      const mi = Math.floor(p2fullTrail.length * 0.5);
+      const p0 = p2fullTrail[Math.max(0,mi-3)];
+      const p1 = p2fullTrail[Math.min(p2fullTrail.length-1,mi+3)];
+      const dx=p1.x-p0.x, dy=p1.y-p0.y;
+      const dlen=Math.sqrt(dx*dx+dy*dy);
+      if(dlen>0){
+        const nx=dx/dlen, ny=dy/dlen;  // physical direction
+        // Convert direction to screen direction (x same, y inverted)
+        const snx=nx, sny=-ny;
+        const mx=toSX(p2fullTrail[mi].x), my=toSY(p2fullTrail[mi].y);
+        const as=16;
+        ctxP.fillStyle=`rgba(${tr},${tg},${tb},1)`;
+        ctxP.beginPath();
+        ctxP.moveTo(mx+snx*as,       my+sny*as);
+        ctxP.lineTo(mx-snx*as+sny*as*0.6, my-sny*as-snx*as*0.6);
+        ctxP.lineTo(mx-snx*as-sny*as*0.6, my-sny*as+snx*as*0.6);
+        ctxP.closePath(); ctxP.fill();
+      }
+    }
+  }
+
+  // ── CURRENT ELECTRON + FORCE ARROWS ──────────────────────────
+  const ex=toSX(p2.x), ey=toSY(p2.y);
+  const inPlate = p2.x>=0 && p2.x<=PLATE_W && Math.abs(p2.y)<=PLATE_H;
+
+  if(inPlate){
+    // Electron dot
+    ctxP.fillStyle='#2060ff';
+    ctxP.beginPath(); ctxP.arc(ex,ey,8,0,Math.PI*2); ctxP.fill();
+    ctxP.fillStyle='rgba(64,144,255,.25)';
+    ctxP.beginPath(); ctxP.arc(ex,ey,15,0,Math.PI*2); ctxP.fill();
+
+    // F_E (upward on electron) — yellow, labelled "qE"
+    const F_E_mag = Math.abs(QE) * p2.E_val;   // Newtons
+    // F_B (downward on electron when vx>0) — pink, labelled "Bqv"
+    const F_B_mag = Math.abs(QE) * Math.abs(p2.vx) * B0;
+
+    const forceScale = plotH * 0.22 / (Math.abs(QE)*E_BAL);  // px per Newton, scale so balanced = nice length
+    const minArrow = 6;
+
+    // qE: upward (−screen Y direction)
+    const qE_len = Math.max(minArrow, F_E_mag * forceScale);
+    drawForceArrow(ctxP, ex, ey, ex, ey - qE_len, '#ffd020', 'qE\n(electric)', 'right');
+
+    // Bqv: downward (+screen Y direction)
+    const Bqv_len = Math.max(minArrow, F_B_mag * forceScale);
+    drawForceArrow(ctxP, ex, ey, ex, ey + Bqv_len, '#ff30c0', 'Bqv\n(magnetic)', 'right');
+  }
+
+  // ── STATUS LABEL ──────────────────────────────────────────────
+  const statusCols=['#ff7070','#20ff80','#ffd020'];
+  const vEntry = [V0*2.0, V0*1.0, V0*0.4][p2.preset];
+  ctxP.fillStyle=statusCols[p2.preset];
+  ctxP.font='bold 13px Arial'; ctxP.textAlign='center';
+  ctxP.fillText(preset.desc, W/2, H-14);
+
+  // ── FIXED FIELD LABELS (top-right corner) ─────────────────────
+  ctxP.font='11px Arial'; ctxP.textAlign='right'; ctxP.fillStyle='rgba(180,200,220,0.6)';
+  ctxP.fillText('E = 1500 V/m (fixed)', W-marginR, marginT-42);
+  ctxP.fillText('B = 0.5 mT  (fixed)', W-marginR, marginT-26);
+  // Entry speed
+  ctxP.fillStyle=statusCols[p2.preset];
+  ctxP.font='bold 12px Arial';
+  ctxP.fillText(`v = ${(vEntry/1e6).toFixed(1)} Mm/s`, W-marginR, marginT-10);
+
+  // ── LIVE FORCE VALUES ──────────────────────────────────────────
+  const F_E_disp = Math.abs(QE)*E_BAL;
+  const F_B_disp = Math.abs(QE)*Math.abs(p2.vx)*B0;
+  ctxP.font='11px Arial'; ctxP.textAlign='left'; ctxP.fillStyle='rgba(180,200,220,0.7)';
+  ctxP.fillStyle='#ffd020';
+  ctxP.fillText(`qE  = ${(F_E_disp*1e16).toFixed(2)} × 10⁻¹⁶ N`, ox, marginT-38);
+  ctxP.fillStyle='#ff30c0';
+  ctxP.fillText(`Bqv = ${(F_B_disp*1e16).toFixed(2)} × 10⁻¹⁶ N`, ox, marginT-22);
+  // Ratio indicator
+  const ratio = F_B_disp / F_E_disp;
+  ctxP.fillStyle='rgba(180,200,220,0.6)';
+  ctxP.fillText(`Bqv / qE = ${ratio.toFixed(2)}`, ox, marginT-6);
+}
+
+function drawForceArrow(ctx,x1,y1,x2,y2,col,lbl,side='right'){
+  const dx=x2-x1, dy=y2-y1, len=Math.sqrt(dx*dx+dy*dy);
+  if(len<3) return;
+  ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  const ang=Math.atan2(dy,dx), hs=Math.min(12,len*.45);
+  ctx.beginPath();
+  ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-hs*Math.cos(ang-.4), y2-hs*Math.sin(ang-.4));
+  ctx.lineTo(x2-hs*Math.cos(ang+.4), y2-hs*Math.sin(ang+.4));
+  ctx.closePath(); ctx.fill();
+  if(lbl){
+    const lines = lbl.split('\n');
+    ctx.font='bold 12px Arial';
+    const offX = side==='right' ? 14 : -14;
+    const tx=(x1+x2)/2+offX, ty=(y1+y2)/2;
+    lines.forEach((line,i)=>{
+      ctx.textAlign = side==='right'?'left':'right';
+      ctx.fillText(line, tx, ty+(i-lines.length/2+.5)*15);
+    });
+  }
+}
+
+function resizePlate(){
+  const pw=cPlate.parentElement;
+  cPlate.width=pw.clientWidth; cPlate.height=pw.clientHeight;
+}
+window.addEventListener('resize', resizePlate);
+resizePlate();
+
+// ═══════════════════════════════════════════════════════════════════
+//  PHYSICS (3D RK4)
+// ═══════════════════════════════════════════════════════════════════
+function lorentzAccel(v,Bvec,Evec){
+  const vxB=new THREE.Vector3().crossVectors(v,Bvec);
+  return new THREE.Vector3().addScaledVector(Evec,QE).addScaledVector(vxB,QE).divideScalar(ME);
+}
+function rk4Step(Bvec,Evec){
+  const h=DT;
+  const k1v=lorentzAccel(vel,Bvec,Evec), k1p=vel.clone();
+  const v2=vel.clone().addScaledVector(k1v,h/2);
+  const k2v=lorentzAccel(v2,Bvec,Evec), k2p=v2.clone();
+  const v3=vel.clone().addScaledVector(k2v,h/2);
+  const k3v=lorentzAccel(v3,Bvec,Evec), k3p=v3.clone();
+  const v4=vel.clone().addScaledVector(k3v,h);
+  const k4v=lorentzAccel(v4,Bvec,Evec), k4p=v4.clone();
+  vel.addScaledVector(k1v,h/6).addScaledVector(k2v,h/3).addScaledVector(k3v,h/3).addScaledVector(k4v,h/6);
+  pos.addScaledVector(k1p,h/6).addScaledVector(k2p,h/3).addScaledVector(k3p,h/3).addScaledVector(k4p,h/6);
+}
+
+function initPhysics(){
+  const sc=SCENDEF[cur], st=ST[cur];
+  const theta=sc.getTheta(st)*Math.PI/180;
+  vel.set(V0*Math.sin(theta), 0, V0*Math.cos(theta));
+  pos.set(0,0,0);
+  trail=[]; turns=0; prevVx=vel.x;
+  trailComplete=false;
+  midCone.visible=false;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  UPDATE ARROWS (3D)
+// ═══════════════════════════════════════════════════════════════════
+function updateArrows(){
+  const sc=SCENDEF[cur], st=ST[cur];
+  const Bvec=sc.getBVec(st), Evec=sc.getEVec(st);
+  const Bhat=Bvec.clone().normalize();
+  const vparSc=vel.dot(Bhat);
+  const vparV=Bhat.clone().multiplyScalar(vparSc);
+  const vperpV=vel.clone().sub(vparV);
+  const speed=vel.length();
+  const Amax=.38;
+  const vxB=new THREE.Vector3().crossVectors(vel,Bvec);
+  const Fmag=vxB.clone().multiplyScalar(QE);
+  const Felec=Evec.clone().multiplyScalar(QE);
+  const Fnet=Fmag.clone().add(Felec);
+
+  if(aObjs['v'])     placeArrow('v',    vel,    Math.min(Amax,speed/V0*Amax));
+  if(aObjs['vpar'])  placeArrow('vpar', vparV,  Math.min(Amax,Math.abs(vparSc)/V0*Amax));
+  if(aObjs['vperp']) placeArrow('vperp',vperpV, Math.min(Amax,vperpV.length()/V0*Amax));
+  if(aObjs['F'])     placeArrow('F',    Fnet,   Fnet.length()>1e-26 ? .32 : 0);
+  if(aObjs['B'])     placeArrowFixed('B', new THREE.Vector3(-.4,0,.3), Bvec, .58);
+  if(aObjs['E']){
+    if(Evec.length()>.1) placeArrowFixed('E', new THREE.Vector3(.4,0,.3), Evec, .58);
+    else { aObjs['E'].a.visible=false; aObjs['E'].l.visible=false; }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  HUD
+// ═══════════════════════════════════════════════════════════════════
+let hudT=0;
+function updateHUD(){
+  if(++hudT%5!==0) return;
+  const sc=SCENDEF[cur], st=ST[cur];
+  const Bvec=sc.getBVec(st), Evec=sc.getEVec(st);
+  const Bhat=Bvec.clone().normalize();
+  const vpar=vel.dot(Bhat);
+  const vperpV=vel.clone().sub(Bhat.clone().multiplyScalar(vpar));
+  const spd=vel.length();
+  const vxB=new THREE.Vector3().crossVectors(vel,Bvec);
+  const Fnet=vxB.clone().multiplyScalar(QE).addScaledVector(Evec,QE);
+  const fmm=v=>(v/1e6).toFixed(2)+' Mm/s';
+  document.getElementById('ov-spd').textContent=fmm(spd);
+  document.getElementById('ov-vp').textContent=fmm(Math.abs(vpar));
+  document.getElementById('ov-vt').textContent=fmm(vperpV.length());
+  document.getElementById('ov-tr').textContent=turns.toFixed(1);
+  document.getElementById('rv-spd').textContent=fmm(spd);
+  document.getElementById('rv-vp').textContent=fmm(Math.abs(vpar));
+  document.getElementById('rv-vt').textContent=fmm(vperpV.length());
+  document.getElementById('rv-fn').textContent=Fnet.length().toExponential(1)+' N';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  SET SCENARIO
+// ═══════════════════════════════════════════════════════════════════
+function setScenario(idx){
+  cur=idx;
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+
+  const sc=SCENDEF[idx], st=ST[idx];
+  document.getElementById('scenario-title').textContent=sc.title;
+  document.getElementById('scenario-desc').innerHTML=sc.desc;
+
+  const is2D=!!sc.is2D;
+  document.getElementById('canvasWrap').style.display=is2D?'none':'block';
+  document.getElementById('plate-wrap').style.display=is2D?'block':'none';
+  document.getElementById('sim-btns').style.display='block';   // always show play/pause/reset
+  document.getElementById('overlay').style.display=is2D?'none':'block';
+
+  const ci=document.getElementById('ctrl-inner'); ci.innerHTML='';
+  if(is2D){
+    sc.presets.forEach(p=>{
+      const btn=document.createElement('button');
+      btn.className='preset-btn'+(p.id===st.activePreset?' active':'');
+      btn.innerHTML=`<span class="pb-title" style="color:${p.colLabel}">${p.label}</span><span class="pb-desc">${p.desc}</span>`;
+      btn.onclick=()=>{
+        st.activePreset=p.id;
+        document.querySelectorAll('.preset-btn').forEach((b,i)=>b.classList.toggle('active',i===p.id));
+        initPlate(p.id);
+      };
+      ci.appendChild(btn);
+    });
+    resizePlate();
+    initPlate(st.activePreset);
+  } else {
+    sc.controls.forEach(ctrl=>{
+      let cv=ctrl.defVal;
+      if(ctrl.id.startsWith('t')) cv=st.theta;
+      if(ctrl.id.startsWith('e')) cv=st.eStr;
+      const row=document.createElement('div'); row.className='slider-row';
+      row.innerHTML=`<div class="slider-label"><span>${ctrl.label}</span>
+        <span class="sval" id="sv${ctrl.id}">${cv}${ctrl.unit}</span></div>
+        <input type="range" min="${ctrl.min}" max="${ctrl.max}" step="${ctrl.step}" value="${cv}">`;
+      ci.appendChild(row);
+      row.querySelector('input').addEventListener('input',function(){
+        const v=parseFloat(this.value);
+        document.getElementById('sv'+ctrl.id).textContent=v+ctrl.unit;
+        ctrl.apply(st,v); initPhysics();
+      });
+    });
+    buildArrows(sc.arrows);
+    setTrailColor(sc.trailCol);
+    initPhysics();
+    setTimeout(resize3,50);
+  }
+
+  // Legend
+  const li=document.getElementById('leg-inner'); li.innerHTML='';
+  const legendItems = is2D ? [
+    {dot:'#ffd020', txt:'qE — electric force on electron (upward, toward + plate)'},
+    {dot:'#ff30c0', txt:'Bqv — magnetic force on electron (downward)'},
+    {dot:'#ff5050', txt:'v too fast → Bqv > qE → curves toward − plate'},
+    {dot:'#20ff80', txt:'v just right → qE = Bqv → straight line'},
+    {dot:'#ffd020', txt:'v too slow → qE > Bqv → curves toward + plate'},
+  ] : sc.legend;
+  legendItems.forEach(item=>{
+    const d=document.createElement('div'); d.className='leg-item';
+    if(item.dot) d.innerHTML=`<div class="leg-dot" style="background:${item.dot};box-shadow:0 0 5px ${item.dot}88"></div><span>${item.txt}</span>`;
+    else d.innerHTML=`<div class="leg-dash" style="background:${item.dash}"></div><span>${item.txt}</span>`;
+    li.appendChild(d);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  CONTROLS
+// ═══════════════════════════════════════════════════════════════════
+function togglePP(){ running=!running; document.getElementById('ppBtn').textContent=running?'⏸ Pause':'▶ Play'; }
+function doReset(){ if(cur===2) initPlate(ST[2].activePreset); else initPhysics(); }
+
+// ═══════════════════════════════════════════════════════════════════
+//  ANIMATION LOOP
+// ═══════════════════════════════════════════════════════════════════
+let plateResetTimer=null;
+function animate(){
+  requestAnimationFrame(animate);
+  if(running){
+    if(cur===2){
+      // 2D plate sim — auto-restart after electron exits
+      if(!p2running){
+        if(!plateResetTimer){
+          plateResetTimer=setTimeout(()=>{
+            initPlate(ST[2].activePreset); plateResetTimer=null;
+          }, 1200);
         }
-
-        function createArrow(color) {
-            const dir = new THREE.Vector3(1, 0, 0);
-            const arrow = new THREE.ArrowHelper(dir, new THREE.Vector3(0,0,0), 1, color, 0.2, 0.1);
-            scene.add(arrow);
-            return arrow;
+      } else {
+        stepPlate(25);
+      }
+      drawPlate();
+    } else {
+      const sc=SCENDEF[cur], st=ST[cur];
+      const Bvec=sc.getBVec(st), Evec=sc.getEVec(st);
+      for(let i=0;i<SPF;i++){
+        rk4Step(Bvec,Evec);
+        if(prevVx!==0 && Math.sign(vel.x)!==Math.sign(prevVx)) turns+=.5;
+        prevVx=vel.x;
+        // Keep building trail until TARGET_TURNS revolutions complete
+        if(!trailComplete){
+          const sp=pos.clone().multiplyScalar(SCALE);
+          trail.push(sp.clone());
+          if(turns >= TARGET_TURNS){
+            trailComplete = true; // path is now fully drawn — stop adding points
+          }
         }
+        // Safety: if electron drifts wildly (E∥B scenario), reset
+        if(Math.abs(pos.z)*SCALE > 20){ initPhysics(); break; }
+      }
+      const sp=pos.clone().multiplyScalar(SCALE);
+      eSphere.position.copy(sp); ePL.position.copy(sp);
+      flushTrail3();
+      updateArrows();
+      updateHUD();
+      renderer.render(scene3,camera);
+    }
+  } else {
+    if(cur!==2) renderer.render(scene3,camera);
+    else drawPlate();  // keep plate visible when paused
+  }
+}
 
-        function resetSimulation() {
-            pos.set(-5, 0, 0);
-            
-            // Convert angle to velocity vector
-            // Angle is relative to B field which is along Z axis in this sim logic
-            const rad = (90 - vAngle) * Math.PI / 180;
-            const vMag = vInit; 
-            vel.set(
-                vMag * Math.sin(rad), // x component
-                0,                    // y component
-                vMag * Math.cos(rad)  // z component (parallel to B)
-            );
-
-            points = [pos.clone()];
-            updateTrail();
-        }
-
-        function updateTrail() {
-            const positions = new Float32Array(points.length * 3);
-            for (let i = 0; i < points.length; i++) {
-                positions[i * 3] = points[i].x;
-                positions[i * 3 + 1] = points[i].y;
-                positions[i * 3 + 2] = points[i].z;
-            }
-            trailGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        }
-
-        function setView(type) {
-            const dist = 15;
-            switch(type) {
-                case 'front': camera.position.set(0, 0, dist); camera.lookAt(0,0,0); break;
-                case 'top': camera.position.set(0, dist, 0); camera.lookAt(0,0,0); break;
-                case 'side': camera.position.set(dist, 0, 0); camera.lookAt(0,0,0); break;
-                case 'iso': camera.position.set(10, 10, 10); camera.lookAt(0,0,0); break;
-            }
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-
-            // 1. Physics Calculation (F = qE + q(v x B))
-            // Vector orientation: B is along Z axis.
-            const B = new THREE.Vector3(0, 0, bField * 0.1); 
-            const E = new THREE.Vector3(0, 0, 0);
-            if (eMode === 'parallel') {
-                E.z = eField * 0.1;
-            } else {
-                E.y = eField * 0.1;
-            }
-
-            // Magnetic Force = v x B
-            const vCrossB = new THREE.Vector3().crossVectors(vel, B);
-            
-            // Lorentz Force (Note: q is negative for electron)
-            const force = new THREE.Vector3().addVectors(E, vCrossB).multiplyScalar(-1);
-
-            // Acceleration a = F/m (Simplified scaling for visualization)
-            const accel = force.clone().multiplyScalar(0.5); 
-            
-            vel.add(accel.multiplyScalar(DT));
-            pos.add(vel.clone().multiplyScalar(DT));
-
-            electron.position.copy(pos);
-
-            // Update vectors at electron position
-            arrowV.position.copy(pos);
-            arrowV.setDirection(vel.clone().normalize());
-            arrowV.setLength(vel.length() * 0.5 + 0.1);
-
-            arrowB.position.copy(pos);
-            arrowB.setDirection(new THREE.Vector3(0,0,1));
-            arrowB.setLength(Math.abs(bField) * 0.3 + 0.1);
-
-            arrowE.position.copy(pos);
-            const eDir = E.clone().normalize();
-            arrowE.setDirection(eDir.length() > 0 ? eDir : new THREE.Vector3(1,0,0));
-            arrowE.setLength(Math.abs(eField) * 0.3 + (Math.abs(eField) > 0 ? 0.1 : 0));
-            arrowE.visible = Math.abs(eField) > 0;
-
-            arrowF.position.copy(pos);
-            const fDir = force.clone().normalize();
-            arrowF.setDirection(fDir.length() > 0 ? fDir : new THREE.Vector3(1,0,0));
-            arrowF.setLength(force.length() * 2 + (force.length() > 0 ? 0.1 : 0));
-
-            // 2. Trail Management
-            if (points.length < 1000) {
-                points.push(pos.clone());
-                updateTrail();
-            }
-
-            // 3. Bounds check to reset
-            if (pos.length() > 30) resetSimulation();
-
-            renderer.render(scene, camera);
-        }
-
-        // --- UI Listeners ---
-        document.getElementById('bField').addEventListener('input', (e) => {
-            bField = parseFloat(e.target.value);
-            document.getElementById('bVal').innerText = bField.toFixed(1) + " mT";
-        });
-        document.getElementById('eField').addEventListener('input', (e) => {
-            eField = parseFloat(e.target.value);
-            document.getElementById('eVal').innerText = eField.toFixed(1) + " V/m";
-        });
-        document.getElementById('velocity').addEventListener('input', (e) => {
-            vInit = parseFloat(e.target.value);
-            document.getElementById('vVal').innerText = vInit.toFixed(1) + "e5";
-        });
-        document.getElementById('angle').addEventListener('input', (e) => {
-            vAngle = parseInt(e.target.value);
-            document.getElementById('angleVal').innerText = vAngle + "?";
-        });
-        document.getElementById('eMode').addEventListener('change', (e) => {
-            eMode = e.target.value;
-        });
-        document.getElementById('resetBtn').addEventListener('click', resetSimulation);
-        document.getElementById('clearBtn').addEventListener('click', () => {
-            points = [pos.clone()];
-            updateTrail();
-        });
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        // Initialize
-        window.onload = init;
-    </script>
+// ═══════════════════════════════════════════════════════════════════
+//  START
+// ═══════════════════════════════════════════════════════════════════
+setScenario(0);
+animate();
+</script>
 </body>
 </html>
