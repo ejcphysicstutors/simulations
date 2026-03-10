@@ -283,13 +283,12 @@ const ST = [
 let cur = 0, running = true;
 let pos = new THREE.Vector3(), vel = new THREE.Vector3();
 
-// Trail: accumulate full 4-revolution path then stop (never shift/discard)
-// ~9000 steps/rev × 4 revs = 36000 points max
+// Trail: pre-computed full path (4 revolutions), electron animates along it
+// ~9000 steps/rev × 4 revs = ~36000 points
 const TRAIL_MAX = 40000;
-let trail = [];
+let trail = [];        // full pre-computed path (scene units)
+let trailIdx = 0;     // current electron position index along trail
 let turns = 0, prevVx = 0;
-const TARGET_TURNS = 4;   // stop accumulating after this many full revolutions
-let trailComplete = false; // true once 4 revolutions are done
 
 // ═══════════════════════════════════════════════════════════════════
 //  THREE.JS SETUP
@@ -398,28 +397,27 @@ function setTrailColor(hex){
 }
 
 function flushTrail3(){
-  const n = Math.min(trail.length, TRAIL_MAX);
+  const n = trail.length;
   if(n < 2){ trailGeo.setDrawRange(0,0); trailGeo.attributes.position.needsUpdate=true; midCone.visible=false; return; }
-  const off = trail.length - n;
+  // Write all trail points to buffer
   for(let i=0;i<n;i++){
-    trailBuf[i*3]  =trail[off+i].x;
-    trailBuf[i*3+1]=trail[off+i].y;
-    trailBuf[i*3+2]=trail[off+i].z;
+    trailBuf[i*3]  = trail[i].x;
+    trailBuf[i*3+1]= trail[i].y;
+    trailBuf[i*3+2]= trail[i].z;
   }
-  trailGeo.setDrawRange(0,n);
+  trailGeo.setDrawRange(0, n);
   trailGeo.attributes.position.needsUpdate = true;
 
-  // Place a single direction cone at the midpoint of the stored trail
+  // Single midpoint direction cone
   if(n >= 6){
     const mi = Math.floor(n/2);
-    const p0 = trail[off+mi-2];
-    const p1 = trail[off+mi+2];
+    const p0 = trail[Math.max(0, mi-2)];
+    const p1 = trail[Math.min(n-1, mi+2)];
     const dir = new THREE.Vector3(p1.x-p0.x, p1.y-p0.y, p1.z-p0.z);
     if(dir.length() > 1e-9){
       dir.normalize();
       midCone.visible = true;
-      midCone.position.copy(trail[off+mi]);
-      // Cone default axis is +Y; rotate to trail direction
+      midCone.position.copy(trail[mi]);
       midCone.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir);
     }
   }
@@ -773,11 +771,54 @@ function rk4Step(Bvec,Evec){
 function initPhysics(){
   const sc=SCENDEF[cur], st=ST[cur];
   const theta=sc.getTheta(st)*Math.PI/180;
-  vel.set(V0*Math.sin(theta), 0, V0*Math.cos(theta));
-  pos.set(0,0,0);
-  trail=[]; turns=0; prevVx=vel.x;
-  trailComplete=false;
+  // Start conditions
+  const initVel = new THREE.Vector3(V0*Math.sin(theta), 0, V0*Math.cos(theta));
+  const initPos = new THREE.Vector3(0, 0, 0);
+
+  // ── Pre-compute FULL 4-revolution path ───────────────────────
+  // Run physics forward, collect all scene-space points, stop at 4 full turns
+  const Bvec=sc.getBVec(st), Evec=sc.getEVec(st);
+  let pPos=initPos.clone(), pVel=initVel.clone();
+  let pTurns=0, pPrevVx=pVel.x;
+  trail=[];
+
+  const MAX_STEPS = TRAIL_MAX;
+  for(let i=0; i<MAX_STEPS; i++){
+    // RK4 step (inline to avoid using global vel/pos)
+    const h=DT;
+    const k1v=lorentzAccelV(pVel,Bvec,Evec), k1p=pVel.clone();
+    const v2=pVel.clone().addScaledVector(k1v,h/2);
+    const k2v=lorentzAccelV(v2,Bvec,Evec),   k2p=v2.clone();
+    const v3=pVel.clone().addScaledVector(k2v,h/2);
+    const k3v=lorentzAccelV(v3,Bvec,Evec),   k3p=v3.clone();
+    const v4=pVel.clone().addScaledVector(k3v,h);
+    const k4v=lorentzAccelV(v4,Bvec,Evec),   k4p=v4.clone();
+    pVel.addScaledVector(k1v,h/6).addScaledVector(k2v,h/3).addScaledVector(k3v,h/3).addScaledVector(k4v,h/6);
+    pPos.addScaledVector(k1p,h/6).addScaledVector(k2p,h/3).addScaledVector(k3p,h/3).addScaledVector(k4p,h/6);
+
+    if(pPrevVx!==0 && Math.sign(pVel.x)!==Math.sign(pPrevVx)) pTurns+=0.5;
+    pPrevVx=pVel.x;
+
+    const sp=pPos.clone().multiplyScalar(SCALE);
+    trail.push(sp);
+
+    if(pTurns >= 4) break;  // exactly 4 complete revolutions
+  }
+
+  // ── Reset live electron to start of pre-computed path ────────
+  vel.copy(initVel);
+  pos.copy(initPos);
+  trailIdx=0;
+  turns=0; prevVx=vel.x;
   midCone.visible=false;
+  // Draw complete trail immediately
+  flushTrail3();
+}
+
+// Lorentz accel using passed vectors (for pre-computation)
+function lorentzAccelV(v,Bvec,Evec){
+  const vxB=new THREE.Vector3().crossVectors(v,Bvec);
+  return new THREE.Vector3().addScaledVector(Evec,QE).addScaledVector(vxB,QE).divideScalar(ME);
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -932,24 +973,29 @@ function animate(){
     } else {
       const sc=SCENDEF[cur], st=ST[cur];
       const Bvec=sc.getBVec(st), Evec=sc.getEVec(st);
+
+      // Advance electron along the pre-computed trail
+      // SPF steps per frame — step trailIdx forward, loop when end reached
+      trailIdx = (trailIdx + SPF) % trail.length;
+
+      // Also keep vel/pos in sync for arrow/HUD calculations
       for(let i=0;i<SPF;i++){
         rk4Step(Bvec,Evec);
-        if(prevVx!==0 && Math.sign(vel.x)!==Math.sign(prevVx)) turns+=.5;
+        if(prevVx!==0 && Math.sign(vel.x)!==Math.sign(prevVx)) turns+=0.5;
         prevVx=vel.x;
-        // Keep building trail until TARGET_TURNS revolutions complete
-        if(!trailComplete){
-          const sp=pos.clone().multiplyScalar(SCALE);
-          trail.push(sp.clone());
-          if(turns >= TARGET_TURNS){
-            trailComplete = true; // path is now fully drawn — stop adding points
-          }
-        }
-        // Safety: if electron drifts wildly (E∥B scenario), reset
-        if(Math.abs(pos.z)*SCALE > 20){ initPhysics(); break; }
+        // When electron completes one full loop of the path, restart smoothly
+        if(trailIdx===0){ vel.set(V0*Math.sin(sc.getTheta(st)*Math.PI/180),0,V0*Math.cos(sc.getTheta(st)*Math.PI/180)); pos.set(0,0,0); turns=0; prevVx=vel.x; break; }
       }
-      const sp=pos.clone().multiplyScalar(SCALE);
-      eSphere.position.copy(sp); ePL.position.copy(sp);
-      flushTrail3();
+
+      // Position electron sphere at current trail point
+      if(trail.length > 0){
+        const sp = trail[trailIdx];
+        eSphere.position.copy(sp); ePL.position.copy(sp);
+        // Sync pos for arrow calculations
+        pos.copy(sp.clone().divideScalar(SCALE));
+      }
+
+      flushTrail3();   // trail is static after init — just re-renders same points
       updateArrows();
       updateHUD();
       renderer.render(scene3,camera);
